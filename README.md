@@ -16,3 +16,9 @@ Convex settings
 1) MCLR
 2) LASSO
 3) QAP
+
+Datasets
+1) Mnist
+2) FMnist
+3) Cifar10
+4) Synthetic datasets

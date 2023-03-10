@@ -5,3 +5,13 @@ Algorithms
 2) FedRL 
 3) FedFW
 4) FedFW+
+
+# Implemented Models
+non-convex settings
+1) CNN
+2) DNN
+
+Convex settings
+1) MCLR
+2) LASSO
+3) QAP

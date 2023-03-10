@@ -10,6 +10,7 @@ Algorithms
 non-convex settings
 1) CNN
 2) DNN
+3) Matrix complition problem
 
 Convex settings
 1) MCLR

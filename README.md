@@ -21,9 +21,9 @@ Convex settings
 1) Mnist
 2) FMnist
 3) Cifar10
-4) Cifar100
-5) FEMNIST
-4) Synthetic datasets
+4) Cifar100 
+5) FEMNIST 
+4) Synthetic datasets 
 
 
 # Optimizers

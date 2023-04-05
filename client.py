@@ -100,10 +100,13 @@ class Fed_Avg_Client():
     
         
         param_proj = torch.split(param_concat_proj, param_size, dim=0)
-
-        print(param_proj.shape())
+        param_size_now = []
+        # print(param_proj.shape())
         for proj , param in zip(param_proj, self.local_model.parameters()):
             param.data = proj
+            param_size_now.append(len(param.view(-1)))
+        print("After projection param size :", param_size_now)
+
 
     def local_train(self):
         

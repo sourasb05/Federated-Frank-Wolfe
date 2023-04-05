@@ -733,6 +733,8 @@ def read_data(dataset):
     elif(dataset == "EMNIST"):
         clients, train_data, test_data = read_EMnist_data()
 
+    else:
+        print(" No dataset selected")
         
     
     
@@ -754,7 +756,44 @@ def read_user_data(index,data,dataset):
         y_train = torch.Tensor(y_train).type(torch.int64)
         X_test = torch.Tensor(X_test).view(-1, NUM_CHANNELS_CIFAR, IMAGE_SIZE_CIFAR, IMAGE_SIZE_CIFAR).type(torch.float32)
         y_test = torch.Tensor(y_test).type(torch.int64)
+    
+    elif(dataset == "Cifar100"):
+        X_train, y_train, X_test, y_test = train_data['x'], train_data['y'], test_data['x'], test_data['y']
+        X_train = torch.Tensor(X_train).view(-1, NUM_CHANNELS_CIFAR, IMAGE_SIZE_CIFAR, IMAGE_SIZE_CIFAR).type(torch.float32)
+        y_train = torch.Tensor(y_train).type(torch.int64)
+        X_test = torch.Tensor(X_test).view(-1, NUM_CHANNELS_CIFAR, IMAGE_SIZE_CIFAR, IMAGE_SIZE_CIFAR).type(torch.float32)
+        y_test = torch.Tensor(y_test).type(torch.int64)
 
+    elif(dataset == "FMNIST"):
+        X_train, y_train, X_test, y_test = train_data['x'], train_data['y'], test_data['x'], test_data['y']
+        X_train = torch.Tensor(X_train).view(-1, NUM_CHANNELS, IMAGE_SIZE, IMAGE_SIZE).type(torch.float32)
+        y_train = torch.Tensor(y_train).type(torch.int64)
+        X_test = torch.Tensor(X_test).view(-1, NUM_CHANNELS, IMAGE_SIZE, IMAGE_SIZE).type(torch.float32)
+        y_test = torch.Tensor(y_test).type(torch.int64)
+    
+    elif(dataset == "MNIST"):
+        X_train, y_train, X_test, y_test = train_data['x'], train_data['y'], test_data['x'], test_data['y']
+        X_train = torch.Tensor(X_train).view(-1, NUM_CHANNELS, IMAGE_SIZE, IMAGE_SIZE).type(torch.float32)
+        y_train = torch.Tensor(y_train).type(torch.int64)
+        X_test = torch.Tensor(X_test).view(-1, NUM_CHANNELS, IMAGE_SIZE, IMAGE_SIZE).type(torch.float32)
+        y_test = torch.Tensor(y_test).type(torch.int64)
+
+    elif(dataset == "EMNIST"):
+        X_train, y_train, X_test, y_test = train_data['x'], train_data['y'], test_data['x'], test_data['y']
+        X_train = torch.Tensor(X_train).view(-1, NUM_CHANNELS, IMAGE_SIZE, IMAGE_SIZE).type(torch.float32)
+        y_train = torch.Tensor(y_train).type(torch.int64)
+        X_test = torch.Tensor(X_test).view(-1, NUM_CHANNELS, IMAGE_SIZE, IMAGE_SIZE).type(torch.float32)
+        y_test = torch.Tensor(y_test).type(torch.int64)
+
+    elif(dataset == "Synthetic"):
+        X_train, y_train, X_test, y_test = train_data['x'], train_data['y'], test_data['x'], test_data['y']
+        X_train = torch.Tensor(X_train).view(-1, NUM_CHANNELS, IMAGE_SIZE, IMAGE_SIZE).type(torch.float32)
+        y_train = torch.Tensor(y_train).type(torch.int64)
+        X_test = torch.Tensor(X_test).view(-1, NUM_CHANNELS, IMAGE_SIZE, IMAGE_SIZE).type(torch.float32)
+        y_test = torch.Tensor(y_test).type(torch.int64)
+    
+    else:
+        print("no dataset found")
     """
     
     We will add the same for MNIST, FMNIST, FEMNIST, etc.

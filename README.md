@@ -11,11 +11,12 @@ non-convex settings
 1) CNN
 2) DNN
 3) Matrix complition problem
+4) QAP
 
 Convex settings
 1) MCLR
 2) LASSO
-3) QAP
+
 
 # Datasets
 1) Mnist

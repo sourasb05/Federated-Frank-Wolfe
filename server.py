@@ -19,12 +19,27 @@ class Fed_Avg_Server():
         
         N = len(selected_users)
 
-        for param in self.global_model.parameters():
-            param.data = torch.zeros_like(param.data)
+        # for param in self.global_model.parameters():
+        #    param.data = torch.zeros_like(param.data)
+        
+        for user in selected_users:
+            param_size_g_param = []
+            param_size_l_param = []
+            for g_param, l_param in  zip(self.global_model.parameters(), user.local_model.parameters()):
+                param_size_g_param.append(len(g_param.view(-1)))
+                param_size_l_param.append(len(l_param.view(-1)))
+            print("------------------")
+            print("param_size_g_param :",param_size_g_param)
+            print("param_size_l_param :",param_size_l_param)
+            print("------------------")
+            #input("press")
         for user in selected_users:
             for g_param, l_param in  zip(self.global_model.parameters(), user.local_model.parameters()):
                 if self.aggregator_name == "simple_averaging":
-                    g_param.data = g_param.data + (1/N)*l_param.data 
+                    print("g_param:",g_param.data)
+                    print("l_param:",l_param.data)
+                    input("press")
+                    g_param.data = g_param.data + (1/N) * l_param.data 
                 elif self.aggregator_name == "weighted_averaging":
                     g_param.data = g_param.data + user.data_ratio * l_param.data
                 else:

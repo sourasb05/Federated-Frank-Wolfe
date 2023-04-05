@@ -200,6 +200,512 @@ def read_cifar10_data():
         
     return train_data['users'], train_data['user_data'], test_data['user_data']
 
+def read_cifar100_data():
+    transform = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+
+    trainset = torchvision.datasets.CIFAR100(root='./data', train=True,download=True, transform=transform)
+    testset = torchvision.datasets.CIFAR100(root='./data', train=False,download=True, transform=transform)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=len(trainset.data),shuffle=False)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=len(testset.data),shuffle=False)
+
+    """
+    enumerate(iterable, start=0)
+    iterable : Any object that supports iterations
+    start : The index value from where  the iteration will be started. Default is 0
+
+    """
+    for _, train_data in enumerate(trainloader,0):
+        trainset.data, trainset.targets = train_data
+    for _, test_data in enumerate(testloader,0):
+        testset.data, testset.targets = test_data
+
+    random.seed(1)
+    np.random.seed(1)
+    NUM_USERS = 1000 # should be muitiple of 10
+    NUM_LABELS = 10
+    # Setup directory for train/test data
+    train_path = './data/train/cifar100_train.json'
+    test_path = './data/test/cifar100_test.json'
+    dir_path = os.path.dirname(train_path)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+    dir_path = os.path.dirname(test_path)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+
+    cifar100_data_image = []
+    cifar100_data_label = []
+    
+    cifar100_data_image.extend(trainset.data.cpu().detach().numpy()) 
+    cifar100_data_image.extend(testset.data.cpu().detach().numpy())
+    cifar100_data_label.extend(trainset.targets.cpu().detach().numpy())
+    cifar100_data_label.extend(testset.targets.cpu().detach().numpy())
+    cifar100_data_image = np.array(cifar100_data_image)
+    cifar100_data_label = np.array(cifar100_data_label)
+
+    cifar100_data = []
+    for i in trange(10):
+        idx = cifar100_data_label==i
+        cifar100_data.append(cifar100_data_image[idx])
+
+
+    # print("\nNumb samples of each label:\n", [len(v) for v in cifa_data])
+    users_lables = []
+
+
+    ###### CREATE USER DATA SPLIT #######
+    # Assign 100 samples to each user
+    X = [[] for _ in range(NUM_USERS)]
+    y = [[] for _ in range(NUM_USERS)]
+    idx = np.zeros(10, dtype=np.int64)
+    for user in range(NUM_USERS):
+        for j in range(NUM_LABELS):  # 3 labels for each users
+            #l = (2*user+j)%10
+            l = (user + j) % 10
+            # print("L:", l)
+            X[user] += cifar100_data[l][idx[l]:idx[l]+10].tolist()
+            y[user] += (l*np.ones(10)).tolist()
+            idx[l] += 10
+
+    # print("IDX1:", idx)  # counting samples for each labels
+
+    # Assign remaining sample by power law
+    user = 0
+    props = np.random.lognormal(
+        0, 2., (10, NUM_USERS, NUM_LABELS))  # last 5 is 5 labels
+    props = np.array([[[len(v)-NUM_USERS]] for v in cifar100_data]) * \
+        props/np.sum(props, (1, 2), keepdims=True)
+    # print("here:",props/np.sum(props,(1,2), keepdims=True))
+    #props = np.array([[[len(v)-100]] for v in mnist_data]) * \
+    #    props/np.sum(props, (1, 2), keepdims=True)
+    #idx = 1000*np.ones(10, dtype=np.int64)
+    # print("here2:",props)
+    for user in trange(NUM_USERS):
+        for j in range(NUM_LABELS):  # 4 labels for each users
+            # l = (2*user+j)%10
+            l = (user + j) % 10
+            num_samples = int(props[l, user//int(NUM_USERS/10), j])
+            numran1 = random.randint(300, 600)
+            num_samples = (num_samples)  + numran1 #+ 200
+            if(NUM_USERS <= 20): 
+                num_samples = num_samples * 2
+            if idx[l] + num_samples < len(cifar100_data[l]):
+                X[user] += cifar100_data[l][idx[l]:idx[l]+num_samples].tolist()
+                y[user] += (l*np.ones(num_samples)).tolist()
+                idx[l] += num_samples
+                # print("check len os user:", user, j, "len data", len(X[user]), num_samples)
+
+    # print("IDX2:", idx) # counting samples for each labels
+
+    # Create data structure
+    train_data = {'users': [], 'user_data':{}, 'num_samples':[]}
+    test_data = {'users': [], 'user_data':{}, 'num_samples':[]}
+
+    # Setup 5 users
+    # for i in trange(5, ncols=120):
+    for i in range(NUM_USERS):
+        uname = i
+        combined = list(zip(X[i], y[i]))
+        random.shuffle(combined)
+        X[i][:], y[i][:] = zip(*combined)
+
+        num_samples = len(X[i])
+        train_len = int(0.75*num_samples)
+        test_len = num_samples - train_len
+
+        #X_train, X_test, y_train, y_test = train_test_split(X[i], y[i], train_size=0.75, stratify=y[i])\
+        
+        test_data['users'].append(uname)
+        test_data["user_data"][uname] =  {'x': X[i][:test_len], 'y': y[i][:test_len]} 
+        test_data['num_samples'].append(test_len)
+
+        train_data["user_data"][uname] =  {'x': X[i][test_len:], 'y': y[i][test_len:]}
+        train_data['users'].append(uname)
+        train_data['num_samples'].append(train_len)
+        
+    return train_data['users'], train_data['user_data'], test_data['user_data']
+
+def read_FMnist_data():
+    transform = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+
+    trainset = torchvision.datasets.FMNIST(root='./data', train=True,download=True, transform=transform)
+    testset = torchvision.datasets.FMNIST(root='./data', train=False,download=True, transform=transform)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=len(trainset.data),shuffle=False)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=len(testset.data),shuffle=False)
+
+    """
+    enumerate(iterable, start=0)
+    iterable : Any object that supports iterations
+    start : The index value from where  the iteration will be started. Default is 0
+
+    """
+    for _, train_data in enumerate(trainloader,0):
+        trainset.data, trainset.targets = train_data
+    for _, test_data in enumerate(testloader,0):
+        testset.data, testset.targets = test_data
+
+    random.seed(1)
+    np.random.seed(1)
+    NUM_USERS = 1000 # should be muitiple of 10
+    NUM_LABELS = 10
+    # Setup directory for train/test data
+    train_path = './data/train/mnist_train.json'
+    test_path = './data/test/mnist_test.json'
+    dir_path = os.path.dirname(train_path)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+    dir_path = os.path.dirname(test_path)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+
+    fmnist_data_image = []
+    fmnist_data_label = []
+    
+    fmnist_data_image.extend(trainset.data.cpu().detach().numpy()) 
+    fmnist_data_image.extend(testset.data.cpu().detach().numpy())
+    fmnist_data_label.extend(trainset.targets.cpu().detach().numpy())
+    fmnist_data_label.extend(testset.targets.cpu().detach().numpy())
+    fmnist_data_image = np.array(fmnist_data_image)
+    fmnist_data_label = np.array(fmnist_data_label)
+
+    fmnist_data = []
+    for i in trange(10):
+        idx = fmnist_data_label==i
+        fmnist_data.append(fmnist_data_image[idx])
+
+
+    # print("\nNumb samples of each label:\n", [len(v) for v in cifa_data])
+    users_lables = []
+
+
+    ###### CREATE USER DATA SPLIT #######
+    # Assign 100 samples to each user
+    X = [[] for _ in range(NUM_USERS)]
+    y = [[] for _ in range(NUM_USERS)]
+    idx = np.zeros(10, dtype=np.int64)
+    for user in range(NUM_USERS):
+        for j in range(NUM_LABELS):  # 3 labels for each users
+            #l = (2*user+j)%10
+            l = (user + j) % 10
+            # print("L:", l)
+            X[user] += fmnist_data[l][idx[l]:idx[l]+10].tolist()
+            y[user] += (l*np.ones(10)).tolist()
+            idx[l] += 10
+
+    # print("IDX1:", idx)  # counting samples for each labels
+
+    # Assign remaining sample by power law
+    user = 0
+    props = np.random.lognormal(
+        0, 2., (10, NUM_USERS, NUM_LABELS))  # last 5 is 5 labels
+    props = np.array([[[len(v)-NUM_USERS]] for v in fmnist_data]) * \
+        props/np.sum(props, (1, 2), keepdims=True)
+    # print("here:",props/np.sum(props,(1,2), keepdims=True))
+    #props = np.array([[[len(v)-100]] for v in mnist_data]) * \
+    #    props/np.sum(props, (1, 2), keepdims=True)
+    #idx = 1000*np.ones(10, dtype=np.int64)
+    # print("here2:",props)
+    for user in trange(NUM_USERS):
+        for j in range(NUM_LABELS):  # 4 labels for each users
+            # l = (2*user+j)%10
+            l = (user + j) % 10
+            num_samples = int(props[l, user//int(NUM_USERS/10), j])
+            numran1 = random.randint(300, 600)
+            num_samples = (num_samples)  + numran1 #+ 200
+            if(NUM_USERS <= 20): 
+                num_samples = num_samples * 2
+            if idx[l] + num_samples < len(fmnist_data[l]):
+                X[user] += fmnist_data[l][idx[l]:idx[l]+num_samples].tolist()
+                y[user] += (l*np.ones(num_samples)).tolist()
+                idx[l] += num_samples
+                # print("check len os user:", user, j, "len data", len(X[user]), num_samples)
+
+    # print("IDX2:", idx) # counting samples for each labels
+
+    # Create data structure
+    train_data = {'users': [], 'user_data':{}, 'num_samples':[]}
+    test_data = {'users': [], 'user_data':{}, 'num_samples':[]}
+
+    # Setup 5 users
+    # for i in trange(5, ncols=120):
+    for i in range(NUM_USERS):
+        uname = i
+        combined = list(zip(X[i], y[i]))
+        random.shuffle(combined)
+        X[i][:], y[i][:] = zip(*combined)
+
+        num_samples = len(X[i])
+        train_len = int(0.75*num_samples)
+        test_len = num_samples - train_len
+
+        #X_train, X_test, y_train, y_test = train_test_split(X[i], y[i], train_size=0.75, stratify=y[i])\
+        
+        test_data['users'].append(uname)
+        test_data["user_data"][uname] =  {'x': X[i][:test_len], 'y': y[i][:test_len]} 
+        test_data['num_samples'].append(test_len)
+
+        train_data["user_data"][uname] =  {'x': X[i][test_len:], 'y': y[i][test_len:]}
+        train_data['users'].append(uname)
+        train_data['num_samples'].append(train_len)
+        
+    return train_data['users'], train_data['user_data'], test_data['user_data']
+
+
+def read_Mnist_data():
+    transform = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+
+    trainset = torchvision.datasets.MNIST(root='./data', train=True,download=True, transform=transform)
+    testset = torchvision.datasets.MNIST(root='./data', train=False,download=True, transform=transform)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=len(trainset.data),shuffle=False)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=len(testset.data),shuffle=False)
+
+    """
+    enumerate(iterable, start=0)
+    iterable : Any object that supports iterations
+    start : The index value from where  the iteration will be started. Default is 0
+
+    """
+    for _, train_data in enumerate(trainloader,0):
+        trainset.data, trainset.targets = train_data
+    for _, test_data in enumerate(testloader,0):
+        testset.data, testset.targets = test_data
+
+    random.seed(1)
+    np.random.seed(1)
+    NUM_USERS = 1000 # should be muitiple of 10
+    NUM_LABELS = 10
+    # Setup directory for train/test data
+    train_path = './data/train/mnist_train.json'
+    test_path = './data/test/mnist_test.json'
+    dir_path = os.path.dirname(train_path)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+    dir_path = os.path.dirname(test_path)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+
+    mnist_data_image = []
+    mnist_data_label = []
+    
+    mnist_data_image.extend(trainset.data.cpu().detach().numpy()) 
+    mnist_data_image.extend(testset.data.cpu().detach().numpy())
+    mnist_data_label.extend(trainset.targets.cpu().detach().numpy())
+    mnist_data_label.extend(testset.targets.cpu().detach().numpy())
+    mnist_data_image = np.array(mnist_data_image)
+    mnist_data_label = np.array(mnist_data_label)
+
+    mnist_data = []
+    for i in trange(10):
+        idx = mnist_data_label==i
+        mnist_data.append(mnist_data_image[idx])
+
+
+    # print("\nNumb samples of each label:\n", [len(v) for v in cifa_data])
+    users_lables = []
+
+
+    ###### CREATE USER DATA SPLIT #######
+    # Assign 100 samples to each user
+    X = [[] for _ in range(NUM_USERS)]
+    y = [[] for _ in range(NUM_USERS)]
+    idx = np.zeros(10, dtype=np.int64)
+    for user in range(NUM_USERS):
+        for j in range(NUM_LABELS):  # 3 labels for each users
+            #l = (2*user+j)%10
+            l = (user + j) % 10
+            # print("L:", l)
+            X[user] += mnist_data[l][idx[l]:idx[l]+10].tolist()
+            y[user] += (l*np.ones(10)).tolist()
+            idx[l] += 10
+
+    # print("IDX1:", idx)  # counting samples for each labels
+
+    # Assign remaining sample by power law
+    user = 0
+    props = np.random.lognormal(
+        0, 2., (10, NUM_USERS, NUM_LABELS))  # last 5 is 5 labels
+    props = np.array([[[len(v)-NUM_USERS]] for v in mnist_data]) * \
+        props/np.sum(props, (1, 2), keepdims=True)
+    # print("here:",props/np.sum(props,(1,2), keepdims=True))
+    #props = np.array([[[len(v)-100]] for v in mnist_data]) * \
+    #    props/np.sum(props, (1, 2), keepdims=True)
+    #idx = 1000*np.ones(10, dtype=np.int64)
+    # print("here2:",props)
+    for user in trange(NUM_USERS):
+        for j in range(NUM_LABELS):  # 4 labels for each users
+            # l = (2*user+j)%10
+            l = (user + j) % 10
+            num_samples = int(props[l, user//int(NUM_USERS/10), j])
+            numran1 = random.randint(300, 600)
+            num_samples = (num_samples)  + numran1 #+ 200
+            if(NUM_USERS <= 20): 
+                num_samples = num_samples * 2
+            if idx[l] + num_samples < len(mnist_data[l]):
+                X[user] += mnist_data[l][idx[l]:idx[l]+num_samples].tolist()
+                y[user] += (l*np.ones(num_samples)).tolist()
+                idx[l] += num_samples
+                # print("check len os user:", user, j, "len data", len(X[user]), num_samples)
+
+    # print("IDX2:", idx) # counting samples for each labels
+
+    # Create data structure
+    train_data = {'users': [], 'user_data':{}, 'num_samples':[]}
+    test_data = {'users': [], 'user_data':{}, 'num_samples':[]}
+
+    # Setup 5 users
+    # for i in trange(5, ncols=120):
+    for i in range(NUM_USERS):
+        uname = i
+        combined = list(zip(X[i], y[i]))
+        random.shuffle(combined)
+        X[i][:], y[i][:] = zip(*combined)
+
+        num_samples = len(X[i])
+        train_len = int(0.75*num_samples)
+        test_len = num_samples - train_len
+
+        #X_train, X_test, y_train, y_test = train_test_split(X[i], y[i], train_size=0.75, stratify=y[i])\
+        
+        test_data['users'].append(uname)
+        test_data["user_data"][uname] =  {'x': X[i][:test_len], 'y': y[i][:test_len]} 
+        test_data['num_samples'].append(test_len)
+
+        train_data["user_data"][uname] =  {'x': X[i][test_len:], 'y': y[i][test_len:]}
+        train_data['users'].append(uname)
+        train_data['num_samples'].append(train_len)
+        
+    return train_data['users'], train_data['user_data'], test_data['user_data']
+
+
+def read_EMnist_data():
+    transform = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+
+    trainset = torchvision.datasets.EMNIST(root='./data', train=True,download=True, transform=transform)
+    testset = torchvision.datasets.EMNIST(root='./data', train=False,download=True, transform=transform)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=len(trainset.data),shuffle=False)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=len(testset.data),shuffle=False)
+
+    """
+    enumerate(iterable, start=0)
+    iterable : Any object that supports iterations
+    start : The index value from where  the iteration will be started. Default is 0
+
+    """
+    for _, train_data in enumerate(trainloader,0):
+        trainset.data, trainset.targets = train_data
+    for _, test_data in enumerate(testloader,0):
+        testset.data, testset.targets = test_data
+
+    random.seed(1)
+    np.random.seed(1)
+    NUM_USERS = 1000 # should be muitiple of 10
+    NUM_LABELS = 10
+    # Setup directory for train/test data
+    train_path = './data/train/emnist_train.json'
+    test_path = './data/test/emnist_test.json'
+    dir_path = os.path.dirname(train_path)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+    dir_path = os.path.dirname(test_path)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+
+    emnist_data_image = []
+    emnist_data_label = []
+    
+    emnist_data_image.extend(trainset.data.cpu().detach().numpy()) 
+    emnist_data_image.extend(testset.data.cpu().detach().numpy())
+    emnist_data_label.extend(trainset.targets.cpu().detach().numpy())
+    emnist_data_label.extend(testset.targets.cpu().detach().numpy())
+    emnist_data_image = np.array(emnist_data_image)
+    emnist_data_label = np.array(emnist_data_label)
+
+    emnist_data = []
+    for i in trange(10):
+        idx = emnist_data_label==i
+        emnist_data.append(emnist_data_image[idx])
+
+
+    # print("\nNumb samples of each label:\n", [len(v) for v in cifa_data])
+    users_lables = []
+
+
+    ###### CREATE USER DATA SPLIT #######
+    # Assign 100 samples to each user
+    X = [[] for _ in range(NUM_USERS)]
+    y = [[] for _ in range(NUM_USERS)]
+    idx = np.zeros(10, dtype=np.int64)
+    for user in range(NUM_USERS):
+        for j in range(NUM_LABELS):  # 3 labels for each users
+            #l = (2*user+j)%10
+            l = (user + j) % 10
+            # print("L:", l)
+            X[user] += emnist_data[l][idx[l]:idx[l]+10].tolist()
+            y[user] += (l*np.ones(10)).tolist()
+            idx[l] += 10
+
+    # print("IDX1:", idx)  # counting samples for each labels
+
+    # Assign remaining sample by power law
+    user = 0
+    props = np.random.lognormal(
+        0, 2., (10, NUM_USERS, NUM_LABELS))  # last 5 is 5 labels
+    props = np.array([[[len(v)-NUM_USERS]] for v in emnist_data]) * \
+        props/np.sum(props, (1, 2), keepdims=True)
+    # print("here:",props/np.sum(props,(1,2), keepdims=True))
+    #props = np.array([[[len(v)-100]] for v in mnist_data]) * \
+    #    props/np.sum(props, (1, 2), keepdims=True)
+    #idx = 1000*np.ones(10, dtype=np.int64)
+    # print("here2:",props)
+    for user in trange(NUM_USERS):
+        for j in range(NUM_LABELS):  # 4 labels for each users
+            # l = (2*user+j)%10
+            l = (user + j) % 10
+            num_samples = int(props[l, user//int(NUM_USERS/10), j])
+            numran1 = random.randint(300, 600)
+            num_samples = (num_samples)  + numran1 #+ 200
+            if(NUM_USERS <= 20): 
+                num_samples = num_samples * 2
+            if idx[l] + num_samples < len(emnist_data[l]):
+                X[user] += emnist_data[l][idx[l]:idx[l]+num_samples].tolist()
+                y[user] += (l*np.ones(num_samples)).tolist()
+                idx[l] += num_samples
+                # print("check len os user:", user, j, "len data", len(X[user]), num_samples)
+
+    # print("IDX2:", idx) # counting samples for each labels
+
+    # Create data structure
+    train_data = {'users': [], 'user_data':{}, 'num_samples':[]}
+    test_data = {'users': [], 'user_data':{}, 'num_samples':[]}
+
+    # Setup 5 users
+    # for i in trange(5, ncols=120):
+    for i in range(NUM_USERS):
+        uname = i
+        combined = list(zip(X[i], y[i]))
+        random.shuffle(combined)
+        X[i][:], y[i][:] = zip(*combined)
+
+        num_samples = len(X[i])
+        train_len = int(0.75*num_samples)
+        test_len = num_samples - train_len
+
+        #X_train, X_test, y_train, y_test = train_test_split(X[i], y[i], train_size=0.75, stratify=y[i])\
+        
+        test_data['users'].append(uname)
+        test_data["user_data"][uname] =  {'x': X[i][:test_len], 'y': y[i][:test_len]} 
+        test_data['num_samples'].append(test_len)
+
+        train_data["user_data"][uname] =  {'x': X[i][test_len:], 'y': y[i][test_len:]}
+        train_data['users'].append(uname)
+        train_data['num_samples'].append(train_len)
+        
+    return train_data['users'], train_data['user_data'], test_data['user_data']
+
+
+
+
+
 def read_data(dataset):
     '''parses data in given train and test data directories
     assumes:
@@ -214,7 +720,23 @@ def read_data(dataset):
     
     if(dataset == "Cifar10"):
         clients, train_data, test_data = read_cifar10_data()
-        return clients, train_data, test_data
+    
+    elif(dataset == "Cifar100"):
+        clients, train_data, test_data = read_cifar100_data()
+
+    elif(dataset == "MNIST"):
+        clients, train_data, test_data = read_Mnist_data()
+    
+    elif(dataset == "FMNIST"):
+        clients, train_data, test_data = read_FMnist_data()
+
+    elif(dataset == "EMNIST"):
+        clients, train_data, test_data = read_EMnist_data()
+
+        
+    
+    
+    return clients, train_data, test_data
 
     
 

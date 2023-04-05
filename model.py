@@ -5,9 +5,9 @@ import torch.nn.functional as F
 
 # CNN model for MNIST
 
-class Net(nn.Module):
+class cnn_Mnist(nn.Module):
     def __init__(self):
-        super(Net, self).__init__()
+        super(cnn_Mnist, self).__init__()
         self.conv1 = nn.Conv2d(1, 16, 2, 1)
         self.conv2 = nn.Conv2d(16, 32, 2, 1)
         self.dropout1 = nn.Dropout(0.25)
@@ -54,7 +54,7 @@ class cnn_Cifar10(nn.Module):
         return F.log_softmax(x, dim=1)
 # CNN model for FMNIST
 
-class cnn_fmnist(nn.Module):
+class cnn_Fmnist(nn.Module):
     
     def __init__(self, args):
         super(cnn_fmnist, self).__init__()

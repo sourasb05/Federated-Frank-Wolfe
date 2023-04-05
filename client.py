@@ -2,10 +2,8 @@ import copy
 import math
 import torch
 import torch.nn as nn
-# from optimizer import GD, PGD
 import random
 from torch.utils.data import DataLoader
-
 
 class Fed_Avg_Client():
 
@@ -22,33 +20,34 @@ class Fed_Avg_Client():
         self.loss = loss
         self.data_ratio = data_ratio
         
-        if optimizer_name == "GD":
+        if optimizer_name == "GD" or optimizer_name == "PGD":
             self.trainloader = DataLoader(train_set, self.train_samples)
             self.testloader =  DataLoader(test_set, self.test_samples)
             self.tot_epoch = 1
             self.optimizer = torch.optim.SGD(self.local_model.parameters(), lr=self.learning_rate)
 
 
-        elif optimizer_name == "SGD":
+        elif optimizer_name == "SGD" or optimizer_name == "PSGD":
             self.trainloader = DataLoader(train_set, self.batch_size)
             self.testloader =  DataLoader(test_set, self.batch_size)
             self.tot_epoch = math.ceil(torch.div(self.train_samples, self.batch_size))
             self.optimizer = torch.optim.SGD(self.local_model.parameters(), lr=self.learning_rate)
         
-        
-        elif self.optimizer_name == "PGD":
-            # self.optimizer = PGD()
-            print("continue")
-
+       
         else:
-            assert(f"AssertionError: No optimizer found")
-    
+            print("no optimizer found")
+        """
+        1. evaluate testset
+        2. evaluate trainset
+        """
         self.testloaderfull = DataLoader(test_set, self.test_samples)
         self.trainloaderfull = DataLoader(train_set, self.train_samples)
-        self.iter_trainloader = iter(self.trainloader)
-        self.iter_testloader = iter(self.testloader)
+        self.iter_trainloader = iter(self.trainloader)   
+        self.iter_testloader = iter(self.testloader)      
         
         self.participation_prob = 1.0
+    
+    
      
     def selection(self):
         outcomes = [0,1]
@@ -73,7 +72,38 @@ class Fed_Avg_Client():
     def set_parameters(self, glob_model):
         for l_param, g_param in zip(self.local_model.parameters(), glob_model.parameters()):
             l_param.data = g_param.data
+
+    def l2_projection(self, x, radius):
+        """
+        Projects the input vector x onto the L2 ball with the given radius.
+        """
         
+        l2_norm = torch.norm(x.float(), p=2)
+        
+        if l2_norm <= radius:
+            return x
+        else:
+            return torch.mul(torch.div(x, l2_norm), radius)
+
+
+        
+    def projection(self):
+        all_param= [] 
+        param_size = []
+        for j, param in enumerate(self.local_model.parameters()):
+            all_param.append(param.view(-1))
+            param_size.append(len(param.view(-1)))
+        print("param_size :",param_size)
+        param_concat = torch.cat(all_param, dim=0)
+        l2_radius = 1
+        param_concat_proj = self.l2_projection(param_concat, l2_radius)
+    
+        
+        param_proj = torch.split(param_concat_proj, param_size, dim=0)
+
+        print(param_proj.shape())
+        for proj , param in zip(param_proj, self.local_model.parameters()):
+            param.data = proj
 
     def local_train(self):
         
@@ -87,6 +117,9 @@ class Fed_Avg_Client():
                 loss = self.loss(output, y)
                 loss.backward()
                 self.optimizer.step()
+        if self.optimizer_name == "PGD":
+            self.projection()
+
 
     def global_eval_train_data(self):
         self.local_model.eval()

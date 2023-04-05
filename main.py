@@ -13,12 +13,12 @@ def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size, glob
     while exp_no < times:
         if model == "CNN":
             if dataset == "MNIST":
-                model = Net().to(device), model
+                model = cnn_Mnist().to(device), model
                 
-            elif dataset == "fmnist":
-                model = cnn_fmnist().to(device), model
+            elif dataset == "FMNIST":
+                model = cnn_Fmnist().to(device), model
 
-            elif dataset == "Cifar10":
+            elif dataset == "CIFAR10":
                 model = cnn_Cifar10().to(device), model
             loss = nn.NLLLoss()
 
@@ -69,11 +69,11 @@ def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size, glob
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--dataset", type=str, default="Cifar10", choices=["MNIST", "FMnist, Cifar10"])
+    parser.add_argument("--dataset", type=str, default="CIFAR10", choices=["MNIST", "FMNIST", "CIFAR10", "EMNIST", "CIFAR100", "SYNTHETIC"])
     parser.add_argument("--model", type=str, default="CNN")
     parser.add_argument("--times", type=int, default=1 )
     parser.add_argument("--fl_algorithm", type=str, default= "FedAvg")
-    parser.add_argument("--optimizer", type=str, default="GD", choices=["GD", "SGD", "FW"])
+    parser.add_argument("--optimizer", type=str, default="GD", choices=["GD", "SGD", "PGD", "PSGD"])
     parser.add_argument("--step_size", type=float, default=0.01)
     parser.add_argument("--glob_iters", type=int, default=10)
     parser.add_argument("--local_iters", type=int, default=1)

@@ -452,7 +452,7 @@ def read_FMnist_data():
 
 
 def read_Mnist_data():
-    transform = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+    transform = transforms.Compose([transforms.ToTensor(),transforms.Normalize([0.5], [0.5])])
 
     trainset = torchvision.datasets.MNIST(root='./data', train=True,download=True, transform=transform)
     testset = torchvision.datasets.MNIST(root='./data', train=False,download=True, transform=transform)
@@ -472,8 +472,8 @@ def read_Mnist_data():
 
     random.seed(1)
     np.random.seed(1)
-    NUM_USERS = 1000 # should be muitiple of 10
-    NUM_LABELS = 10
+    NUM_USERS = 10 # should be muitiple of 10
+    NUM_LABELS = 3
     # Setup directory for train/test data
     train_path = './data/train/mnist_train.json'
     test_path = './data/test/mnist_test.json'
@@ -718,10 +718,10 @@ def read_data(dataset):
         test_data: dictionary of test data
     '''
     
-    if(dataset == "Cifar10"):
+    if(dataset == "CIFAR10"):
         clients, train_data, test_data = read_cifar10_data()
     
-    elif(dataset == "Cifar100"):
+    elif(dataset == "CIFAR100"):
         clients, train_data, test_data = read_cifar100_data()
 
     elif(dataset == "MNIST"):
@@ -750,14 +750,14 @@ def read_user_data(index,data,dataset):
     test_data = data[2][id]
     X_train, y_train, X_test, y_test = train_data['x'], train_data['y'], test_data['x'], test_data['y']
     
-    if(dataset == "Cifar10"):
+    if(dataset == "CIFAR10"):
         X_train, y_train, X_test, y_test = train_data['x'], train_data['y'], test_data['x'], test_data['y']
         X_train = torch.Tensor(X_train).view(-1, NUM_CHANNELS_CIFAR, IMAGE_SIZE_CIFAR, IMAGE_SIZE_CIFAR).type(torch.float32)
         y_train = torch.Tensor(y_train).type(torch.int64)
         X_test = torch.Tensor(X_test).view(-1, NUM_CHANNELS_CIFAR, IMAGE_SIZE_CIFAR, IMAGE_SIZE_CIFAR).type(torch.float32)
         y_test = torch.Tensor(y_test).type(torch.int64)
     
-    elif(dataset == "Cifar100"):
+    elif(dataset == "CIFAR100"):
         X_train, y_train, X_test, y_test = train_data['x'], train_data['y'], test_data['x'], test_data['y']
         X_train = torch.Tensor(X_train).view(-1, NUM_CHANNELS_CIFAR, IMAGE_SIZE_CIFAR, IMAGE_SIZE_CIFAR).type(torch.float32)
         y_train = torch.Tensor(y_train).type(torch.int64)
@@ -785,7 +785,7 @@ def read_user_data(index,data,dataset):
         X_test = torch.Tensor(X_test).view(-1, NUM_CHANNELS, IMAGE_SIZE, IMAGE_SIZE).type(torch.float32)
         y_test = torch.Tensor(y_test).type(torch.int64)
 
-    elif(dataset == "Synthetic"):
+    elif(dataset == "SYNTHETIC"):
         X_train, y_train, X_test, y_test = train_data['x'], train_data['y'], test_data['x'], test_data['y']
         X_train = torch.Tensor(X_train).view(-1, NUM_CHANNELS, IMAGE_SIZE, IMAGE_SIZE).type(torch.float32)
         y_train = torch.Tensor(y_train).type(torch.int64)
@@ -794,12 +794,8 @@ def read_user_data(index,data,dataset):
     
     else:
         print("no dataset found")
-    """
     
-    We will add the same for MNIST, FMNIST, FEMNIST, etc.
-    
-    """
-    
+
     train_data = [(x, y) for x, y in zip(X_train, y_train)]
     test_data = [(x, y) for x, y in zip(X_test, y_test)]
     

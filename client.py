@@ -86,14 +86,26 @@ class Fed_Avg_Client():
             return torch.mul(torch.div(x, l2_norm), radius)
 
 
+    def Projection_l1(x, alpha):
+        shape = x.shape
+        x = x.reshape(-1)
+        proj = euclidean_proj_l1ball(x, alpha)
+        return proj.reshape(*shape)
+
+
+    def Projection_l2(x, alpha):
+        return x / max(alpha, np.linalg.norm(x, 2))
+
+
         
     def projection(self):
         all_param= [] 
         param_size = []
         for j, param in enumerate(self.local_model.parameters()):
-            all_param.append(param.view(-1))
-            param_size.append(len(param.view(-1)))
-        print("param_size :",param_size)
+          
+            all_param.append(param.data.view(-1))
+            param_size.append(len(param.data.view(-1)))
+          
         param_concat = torch.cat(all_param, dim=0)
         l2_radius = 1
         param_concat_proj = self.l2_projection(param_concat, l2_radius)
@@ -103,9 +115,26 @@ class Fed_Avg_Client():
         param_size_now = []
         # print(param_proj.shape())
         for proj , param in zip(param_proj, self.local_model.parameters()):
-            param.data = proj
-            param_size_now.append(len(param.view(-1)))
-        print("After projection param size :", param_size_now)
+            # print(" i am here")
+            parameter_size = param.shape
+            param.data = proj.view(*parameter_size)
+        
+            # print("After projection :", param.data)
+
+    def projection_2(self):
+        shape = self.local_model.parameters().shape
+        # for param in self.local_model.parameters():
+        #    param.data 
+        # print(shape)
+        # input("press")
+        parameters = self.local_model.parameters().reshape(-1)
+        l2_radius=1
+        param_proj = self.l2_projection(parameters, l2_radius)
+
+        param_proj = param_proj.reshape(*shape)
+
+        # self.local_model.parameters() = param_proj
+              
 
 
     def local_train(self):

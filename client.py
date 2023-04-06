@@ -107,7 +107,7 @@ class Fed_Avg_Client():
             param_size.append(len(param.data.view(-1)))
           
         param_concat = torch.cat(all_param, dim=0)
-        l2_radius = 1
+        l2_radius = 0.5
         param_concat_proj = self.l2_projection(param_concat, l2_radius)
     
         
@@ -149,7 +149,8 @@ class Fed_Avg_Client():
                 loss = self.loss(output, y)
                 loss.backward()
                 self.optimizer.step()
-        if self.optimizer_name == "PGD":
+        if self.optimizer_name == "PGD" or self.optimizer_name == "PSGD1821Cs12@
+        ":
             self.projection()
 
 

@@ -149,8 +149,7 @@ class Fed_Avg_Client():
                 loss = self.loss(output, y)
                 loss.backward()
                 self.optimizer.step()
-        if self.optimizer_name == "PGD" or self.optimizer_name == "PSGD1821Cs12@
-        ":
+        if self.optimizer_name == "PGD" or self.optimizer_name == "PSGD":
             self.projection()
 
 

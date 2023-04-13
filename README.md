@@ -2,7 +2,7 @@
 
 Algorithms
 1) FedAvg
-2) FedRL 
+2) FedDR
 3) FedFW
 4) FedFW+
 

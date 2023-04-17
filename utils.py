@@ -703,6 +703,46 @@ def read_EMnist_data():
     return train_data['users'], train_data['user_data'], test_data['user_data']
 
 
+def download_MovieLens_data():
+    """ 
+
+    Description
+
+    This script downloads MovieLens Datasets from GroupLens Research for the 
+    matrix completion experiments. Before using the datasets, please read 
+    the ters of use of GroupLens Research, included in the README files. 
+    If the README files are missing or corrupted, you can find it at 
+    "https://grouplens.org/datasets/movielens/" 
+    Download the datasets and unzip (if the required files are missing)
+
+
+    """
+    print('You are about to download MovieLens datasets from GroupLens Research Please read the terms of use in the README files first')
+
+    dir_path = './data'
+
+    # Check if the directory does not exist
+    if not os.path.exists(dir_path):
+    # Create the directory
+        os.makedirs(dir_path)
+        print(f' "{dir_path}" created successfully!')
+    else:
+        print(f'Folder "{dir_path}" already exists.')
+    
+    if ~exist('./data/ml-1m/ratings.dat','file')
+    websave('data/ml-1m.zip','http://files.grouplens.org/datasets/movielens/ml-1m.zip')
+    unzip('data/ml-1m.zip','data/')
+    ~exist('./data/ml-100k/ub.train','file') || ~exist('./data/ml-100k/ub.test','file') 
+    websave('data/ml-100k.zip','http://files.grouplens.org/datasets/movielens/ml-100k.zip')
+    unzip('data/ml-100k.zip','data/')
+
+
+    print('Data is downloaded and ready for use.\n');
+
+
+def read_MovieLens_data():
+
+
 
 
 

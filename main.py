@@ -1,7 +1,7 @@
 from model import *
 from server import Fed_Avg_Server
 from client import Fed_Avg_Client
-from utils import select_users, read_data, read_user_data
+from utils import select_users, read_data, read_user_data, RMSE_nuclear
 import argparse
 import torch.nn as nn 
 
@@ -21,6 +21,10 @@ def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size, glob
             elif dataset == "CIFAR10":
                 model = cnn_Cifar10().to(device), model
             loss = nn.NLLLoss()
+
+        elif model == "MatComp":
+            if dataset == "MovieLens100k":
+                loss = RMSE_nuclear(dataset)
 
         else:
             print(" do nothing")

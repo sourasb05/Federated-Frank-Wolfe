@@ -146,7 +146,7 @@ def read_cifar10_data():
     # Assign remaining sample by power law
     user = 0
     props = np.random.lognormal(
-        0, 2., (10, NUM_USERS, NUM_LABELS))  # last 5 is 5 labels
+        0, 2., (10, NUM_USERS, NUM_LABELS))  
     props = np.array([[[len(v)-NUM_USERS]] for v in cifa_data]) * \
         props/np.sum(props, (1, 2), keepdims=True)
     # print("here:",props/np.sum(props,(1,2), keepdims=True))
@@ -221,7 +221,7 @@ def read_cifar100_data():
     random.seed(1)
     np.random.seed(1)
     NUM_USERS = 1000 # should be muitiple of 10
-    NUM_LABELS = 10
+    NUM_LABELS = 3
     # Setup directory for train/test data
     train_path = './data/train/cifar100_train.json'
     test_path = './data/test/cifar100_test.json'
@@ -243,9 +243,12 @@ def read_cifar100_data():
     cifar100_data_label = np.array(cifar100_data_label)
 
     cifar100_data = []
-    for i in trange(10):
+    for i in trange(100):
         idx = cifar100_data_label==i
         cifar100_data.append(cifar100_data_image[idx])
+
+    #print(len(cifar100_data))
+    # input("press")
 
 
     # print("\nNumb samples of each label:\n", [len(v) for v in cifa_data])
@@ -256,42 +259,57 @@ def read_cifar100_data():
     # Assign 100 samples to each user
     X = [[] for _ in range(NUM_USERS)]
     y = [[] for _ in range(NUM_USERS)]
-    idx = np.zeros(10, dtype=np.int64)
+    idx = np.zeros(100, dtype=np.int64)
     for user in range(NUM_USERS):
         for j in range(NUM_LABELS):  # 3 labels for each users
             #l = (2*user+j)%10
-            l = (user + j) % 10
+            l = (user + j) % 100
             # print("L:", l)
             X[user] += cifar100_data[l][idx[l]:idx[l]+10].tolist()
-            y[user] += (l*np.ones(10)).tolist()
+            y[user] += (l*np.ones(100)).tolist()
+
+            # print("X[",user,"] :",X[user])
+            # print("y[",user,"] :",X[user])
+            # print("idx[",l,"] :",idx[l])
+            # input("press")
+            
             idx[l] += 10
 
     # print("IDX1:", idx)  # counting samples for each labels
 
     # Assign remaining sample by power law
     user = 0
-    props = np.random.lognormal(
-        0, 2., (10, NUM_USERS, NUM_LABELS))  # last 5 is 5 labels
+    props = np.random.lognormal(0, 2., (100, NUM_USERS, NUM_LABELS))  
+    
     props = np.array([[[len(v)-NUM_USERS]] for v in cifar100_data]) * \
         props/np.sum(props, (1, 2), keepdims=True)
-    # print("here:",props/np.sum(props,(1,2), keepdims=True))
-    #props = np.array([[[len(v)-100]] for v in mnist_data]) * \
-    #    props/np.sum(props, (1, 2), keepdims=True)
-    #idx = 1000*np.ones(10, dtype=np.int64)
-    # print("here2:",props)
+    
+    # print(props)
+
+
     for user in trange(NUM_USERS):
         for j in range(NUM_LABELS):  # 4 labels for each users
             # l = (2*user+j)%10
-            l = (user + j) % 10
-            num_samples = int(props[l, user//int(NUM_USERS/10), j])
+            l = (user + j) % 100
+            num_samples = int(props[l, user//int(NUM_USERS/100), j])
+            
             numran1 = random.randint(300, 600)
             num_samples = (num_samples)  + numran1 #+ 200
+            print(" num_samples", num_samples)
+
+
             if(NUM_USERS <= 20): 
                 num_samples = num_samples * 2
+            print("len(cfar100_data[",l,"] :", len(cifar100_data[l]))
             if idx[l] + num_samples < len(cifar100_data[l]):
                 X[user] += cifar100_data[l][idx[l]:idx[l]+num_samples].tolist()
                 y[user] += (l*np.ones(num_samples)).tolist()
                 idx[l] += num_samples
+
+                print("X[",user,"] :",X[user])
+                print("y[",user,"] :",X[user])
+                print("idx[",l,"] :",idx[l])
+                input("press")
                 # print("check len os user:", user, j, "len data", len(X[user]), num_samples)
 
     # print("IDX2:", idx) # counting samples for each labels
@@ -852,8 +870,8 @@ def read_Celeba_data():
 
 
 
-def download_MovieLens_data():
-    """ 
+"""def download_MovieLens_data():
+    
 
     Description
 
@@ -865,7 +883,7 @@ def download_MovieLens_data():
     Download the datasets and unzip (if the required files are missing)
 
 
-    """
+
     print('You are about to download MovieLens datasets from GroupLens Research Please read the terms of use in the README files first')
 
     dir_path = './data'
@@ -892,7 +910,7 @@ def download_MovieLens_data():
 def read_MovieLens_data():
 
 
-
+"""
 
 
 def read_data(dataset):

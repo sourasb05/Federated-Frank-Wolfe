@@ -1,7 +1,7 @@
 from model import *
 from server import Fed_Avg_Server
 from client import Fed_Avg_Client
-from utils import select_users, read_data, read_user_data, RMSE_nuclear
+from utils import select_users, read_data, read_user_data #, RMSE_nuclear
 import argparse
 import torch.nn as nn 
 
@@ -25,13 +25,11 @@ def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size, glob
                 model = cnn_Emnist().to(device), model
             
             elif dataset == "CELEBA":
-                model = cnn_celeba().to(device), model
+                model = cnn_Celeba().to(device), model
 
-            
-            
-            
-            
-            
+            elif dataset == "CIFAR100":
+                model = cnn_Cifar100().to(device), model
+
             loss = nn.NLLLoss()
 
                 

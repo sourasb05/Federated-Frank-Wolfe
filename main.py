@@ -20,7 +20,22 @@ def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size, glob
 
             elif dataset == "CIFAR10":
                 model = cnn_Cifar10().to(device), model
+            
+            elif dataset == "EMNIST":
+                model = cnn_Emnist().to(device), model
+            
+            elif dataset == "CELEBA":
+                model = cnn_celeba().to(device), model
+
+            
+            
+            
+            
+            
             loss = nn.NLLLoss()
+
+                
+
 
         elif model == "MatComp":
             if dataset == "MovieLens100k":

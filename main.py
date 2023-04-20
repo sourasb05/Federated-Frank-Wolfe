@@ -14,37 +14,40 @@ def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size, glob
         if model == "CNN":
             if dataset == "MNIST":
                 model = cnn_Mnist().to(device), model
+                loss = nn.NLLLoss()
                 
             elif dataset == "FMNIST":
                 model = cnn_Fmnist().to(device), model
+                loss = nn.NLLLoss()
 
             elif dataset == "CIFAR10":
                 model = cnn_Cifar10().to(device), model
+                loss = nn.NLLLoss()
             
             elif dataset == "EMNIST":
                 model = cnn_Emnist().to(device), model
+                loss = nn.NLLLoss()
             
             elif dataset == "CELEBA":
                 model = cnn_Celeba().to(device), model
+                loss = nn.NLLLoss()
 
             elif dataset == "CIFAR100":
                 model = cnn_Cifar100().to(device), model
-
-            loss = nn.NLLLoss()
-
-                
-
-
-        elif model == "MatComp":
-            if dataset == "MovieLens100k":
-                loss = RMSE_nuclear(dataset)
-
+                loss = nn.NLLLoss()
+            
+            elif dataset == "MOVIELENS_1m" and dataset == "MOVIELENS_100k":
+                # model = MatrixFactorization(num_users, num_movies, embedding_size)
+                print("model is in progress....")
+            
         else:
             print(" do nothing")
         
         if fl_algorithm == "FedAvg":
             users = []   # the list of the object of the users
             data = read_data(dataset) 
+            # print(data)
+            input("interrupt from line 50 in main")
 
             # print("len_data",len(data[1]))
             # input("press")
@@ -86,7 +89,7 @@ def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size, glob
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--dataset", type=str, default="CIFAR10", choices=["MNIST", "FMNIST", "CIFAR10", "EMNIST", "CIFAR100", "SYNTHETIC"])
+    parser.add_argument("--dataset", type=str, default="CIFAR10", choices=["MNIST", "FMNIST", "CIFAR10", "EMNIST", "CIFAR100", "SYNTHETIC", "MOVIELENS_1m", "MOVIELENS_100k"])
     parser.add_argument("--model", type=str, default="CNN")
     parser.add_argument("--times", type=int, default=1 )
     parser.add_argument("--fl_algorithm", type=str, default= "FedAvg")

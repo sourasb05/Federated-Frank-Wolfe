@@ -7,6 +7,11 @@ import torchvision
 import torchvision.transforms as transforms
 from tqdm import trange
 import random
+import urllib.request
+import zipfile
+from scipy.sparse import coo_matrix
+
+# from torch.utils.data import Dataset, DataLoader
 
 IMAGE_SIZE = 28
 IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
@@ -864,54 +869,178 @@ def read_Celeba_data():
     return train_data['users'], train_data['user_data'], test_data['user_data']
 
 
+###################### MovieLens Dataset #######################################
 
+def load_data(self):
+    with open(self.file_path, "r") as f:
+        lines = f.readlines()
+    data = []
+    for line in lines:
+        user_id, item_id, rating, timestamp = map(int, line.strip().split("::")[:4])
+        data.append((user_id, item_id, rating, timestamp))
+    return data
 
-
-
-
-
-"""def download_MovieLens_data():
+"""def __len__(self):
+    return len(data)
     
-
-    Description
-
-    This script downloads MovieLens Datasets from GroupLens Research for the 
-    matrix completion experiments. Before using the datasets, please read 
-    the ters of use of GroupLens Research, included in the README files. 
-    If the README files are missing or corrupted, you can find it at 
-    "https://grouplens.org/datasets/movielens/" 
-    Download the datasets and unzip (if the required files are missing)
-
-
-
-    print('You are about to download MovieLens datasets from GroupLens Research Please read the terms of use in the README files first')
-
-    dir_path = './data'
-
-    # Check if the directory does not exist
-    if not os.path.exists(dir_path):
-    # Create the directory
-        os.makedirs(dir_path)
-        print(f' "{dir_path}" created successfully!')
-    else:
-        print(f'Folder "{dir_path}" already exists.')
-    
-    if ~exist('./data/ml-1m/ratings.dat','file')
-    websave('data/ml-1m.zip','http://files.grouplens.org/datasets/movielens/ml-1m.zip')
-    unzip('data/ml-1m.zip','data/')
-    ~exist('./data/ml-100k/ub.train','file') || ~exist('./data/ml-100k/ub.test','file') 
-    websave('data/ml-100k.zip','http://files.grouplens.org/datasets/movielens/ml-100k.zip')
-    unzip('data/ml-100k.zip','data/')
-
-
-    print('Data is downloaded and ready for use.\n');
-
-
-def read_MovieLens_data():
-
-
+def __getitem__(self, idx):
+    return data[idx]
 """
 
+def MovieLensDataset(dataset_name):
+    if dataset_name == "ml-1m":
+        url = "http://files.grouplens.org/datasets/movielens/ml-1m.zip"
+        data_dir = "./data/ml-1m"
+        train_path = "./data/ml-1m/ratings.dat"
+    elif dataset_name == "ml-100k":
+        url = "http://files.grouplens.org/datasets/movielens/ml-100k.zip"
+        data_dir = "./data/ml-100k"
+        train_path = "./data/ml-100k/ub.base"
+        test_path = "./data/ml-100k/ub.test"
+    else:
+        raise ValueError("Invalid dataset name. Available datasets: ml-1m, ml-100k")
+        
+    # Download the dataset if it does not exist
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+        print(f"Downloading {url}...")
+        urllib.request.urlretrieve(url, f"{data_dir}.zip")
+        print(f"Unzipping {data_dir}.zip...")
+        with zipfile.ZipFile(f"{data_dir}.zip", "r") as zip_ref:
+            zip_ref.extractall("./data/")
+        
+    # Load the data file
+    train_data = []
+    test_data = []
+ 
+    if dataset_name == "ml-100k":
+        with open(train_path, "r") as f:
+            train_lines = f.readlines()
+        with open(test_path, "r") as f:
+            test_lines = f.readlines()
+        for line in train_lines:
+            user_id, item_id, rating, timestamp = map(int, line.strip().split("\t")[:4])
+            train_data.append([user_id, item_id, rating, timestamp])
+        for line in test_lines:
+            user_id, item_id, rating, timestamp = map(int, line.strip().split("\t")[:4])
+            test_data.append([user_id, item_id, rating, timestamp])
+        return train_data, test_data     
+    
+    elif dataset_name == "ml-1m":
+        with open(train_path, "r") as f:
+            train_lines = f.readlines()
+        for line in train_lines:
+            user_id, item_id, rating, timestamp = map(int, line.strip().split("\t")[:4])
+            train_data.append([user_id, item_id, rating, timestamp])
+        return train_data, []
+    
+    else:
+        
+        raise ValueError("Invalid dataset name. Available datasets: ml-1m, ml-100k")
+        return 0
+
+    
+    
+    
+
+
+# Define the dataset class
+def read_MovieLens_data(dataset_name):
+    """
+    data[0] = train data
+    data[1] = test data
+    
+    """
+    train_data, test_data = MovieLensDataset(dataset_name)
+    print(train_data[0])
+    
+    UserID_train = np.array([x[0] for x in train_data])
+    MovID_train = np.array([x[1] for x in train_data])
+    Rating_train = np.array([x[2] for x in train_data])
+
+    UserID_test = np.array([x[0] for x in test_data] )
+    MovID_test = np.array([x[1] for x in test_data] )
+    Rating_test = np.array([x[2] for x in test_data])
+
+    ### clear all zero rows and columns
+
+    nU = UserID_train.max() +1 # users
+    nM = MovID_train.max() +1 # Movies
+    nR = len(UserID_train) # Rating
+
+    print("nU :",nU,"nM :",nM,"nR :",nR)
+    
+    A = coo_matrix((Rating_train, (MovID_train-1, UserID_train-1)), shape=(nM, nU))
+    rDel = np.array(~A.getnnz(1)).ravel()  # rows
+    cDel = np.array(~A.getnnz(0)).ravel()  # columns
+    A = A.tocsr()
+    A = A[~rDel, :]
+    A = A[:, ~cDel]
+    MovID_train, UserID_train = A.nonzero()
+
+    B = coo_matrix((Rating_test, (MovID_test-1, UserID_test-1)), shape=(nM, nU))
+    B = B.tocsr()
+    B = B[~rDel, :]
+    B = B[:, ~cDel]
+    MovID_test, UserID_test = B.nonzero()
+
+    nU = int(np.max(UserID_train))  # # Users
+    nM = int(np.max(MovID_test))  # # Movies
+    
+    print("nU :",nU,"nM :",nM,"nR :",nR)
+    
+    
+    client_num = 10  # # Clients
+    client_data = nR // client_num  # # Clients' data
+    
+    print("client_data :",client_data)
+
+    # Random permutation
+    p = np.random.permutation(nR)
+    MovID_train = MovID_train[p]
+    UserID_train = UserID_train[p]
+    Rating_train = Rating_train[p]
+
+    MovID = MovID_train[:client_num*client_data]
+    UserID = UserID_train[:client_num*client_data]
+    Rating = Rating_train[:client_num*client_data]
+    nU = int(np.max(UserID))  # # Users
+    nM = int(np.max(MovID))  # # Movies
+    nR = len(UserID)  # # Ratings
+
+    # Data splitting
+
+    MovID_client = np.zeros((client_data, client_num), dtype=int)
+    UserID_client = np.zeros((client_data, client_num), dtype=int)
+    Rating_client = np.zeros((client_data, client_num))
+    for i in range(client_num):
+        MovID_client[:, i] = MovID[(i * client_data):((i+1) * client_data)]
+        UserID_client[:, i] = UserID[(i * client_data):((i+1) * client_data)]
+        Rating_client[:, i] = Rating[(i * client_data):((i+1) * client_data)]
+
+    alpha = 7000
+
+    Data_ml100k_Nuclear = {
+        'client_num': client_num,
+        'user_num': nU,
+        'movie_num': nM,
+        'rating_num': nR,
+        'MovID': MovID,
+        'UserID': UserID,
+        'Rating': Rating,
+        'MovID_client': MovID_client,
+        'UserID_client': UserID_client,
+        'Rating_client': Rating_client,
+        'MovID_test': MovID_test,
+        'UserID_test': UserID_test,
+        'Rating_test': Rating_test,
+        'alpha': alpha,
+        'Data_name': 'ml100k'
+    }
+
+    # print(Data_ml100k_Nuclear)
+    
+    return Data_ml100k_Nuclear
 
 def read_data(dataset):
     '''parses data in given train and test data directories
@@ -927,25 +1056,36 @@ def read_data(dataset):
     
     if(dataset == "CIFAR10"):
         clients, train_data, test_data = read_cifar10_data()
+        return clients, train_data, test_data
     
     elif(dataset == "CIFAR100"):
         clients, train_data, test_data = read_cifar100_data()
+        return clients, train_data, test_data
 
     elif(dataset == "MNIST"):
         clients, train_data, test_data = read_Mnist_data()
+        return clients, train_data, test_data
     
     elif(dataset == "FMNIST"):
         clients, train_data, test_data = read_FMnist_data()
+        return clients, train_data, test_data
 
     elif(dataset == "EMNIST"):
         clients, train_data, test_data = read_EMnist_data()
+        return clients, train_data, test_data
 
+    elif(dataset == "MOVIELENS_1m"):
+        data = read_MovieLens_data("ml-1m")
+        return data
+    elif(dataset == "MOVIELENS_100k"):
+        data = read_MovieLens_data("ml-100k")
+        return data
     else:
         print(" No dataset selected")
         
     
     
-    return clients, train_data, test_data
+    
 
     
 

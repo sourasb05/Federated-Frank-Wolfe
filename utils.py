@@ -126,6 +126,8 @@ def read_cifar10_data():
     for i in trange(10):
         idx = cifa_data_label==i
         cifa_data.append(cifa_data_image[idx])
+        # print(len(cifa_data[i]))
+        # input("press")
 
 
     # print("\nNumb samples of each label:\n", [len(v) for v in cifa_data])
@@ -146,14 +148,24 @@ def read_cifar10_data():
             y[user] += (l*np.ones(10)).tolist()
             idx[l] += 10
 
+            # print("X[",user,"] :",X[user])
+            # print("y[",user,"] :",y[user])
+            # print("idx[",l,"] :",idx[l])
+            # input("press")
+            
+
     # print("IDX1:", idx)  # counting samples for each labels
 
     # Assign remaining sample by power law
     user = 0
-    props = np.random.lognormal(
-        0, 2., (10, NUM_USERS, NUM_LABELS))  
+    props = np.random.lognormal( 0, 2., (10, NUM_USERS, NUM_LABELS)) 
+    print(props) 
+    print(len(props))
+    input("press")
     props = np.array([[[len(v)-NUM_USERS]] for v in cifa_data]) * \
         props/np.sum(props, (1, 2), keepdims=True)
+    print("Props :",props)
+    input("press at 168")
     # print("here:",props/np.sum(props,(1,2), keepdims=True))
     #props = np.array([[[len(v)-100]] for v in mnist_data]) * \
     #    props/np.sum(props, (1, 2), keepdims=True)
@@ -163,6 +175,9 @@ def read_cifar10_data():
         for j in range(NUM_LABELS):  # 4 labels for each users
             # l = (2*user+j)%10
             l = (user + j) % 10
+            print("l :",l)
+            print(props[l, user//int(NUM_USERS/10), j])
+            input("press at 180")
             num_samples = int(props[l, user//int(NUM_USERS/10), j])
             numran1 = random.randint(300, 600)
             num_samples = (num_samples)  + numran1 #+ 200
@@ -225,8 +240,8 @@ def read_cifar100_data():
 
     random.seed(1)
     np.random.seed(1)
-    NUM_USERS = 1000 # should be muitiple of 10
-    NUM_LABELS = 3
+    NUM_USERS = 100 # should be muitiple of 10
+    NUM_LABELS = 10
     # Setup directory for train/test data
     train_path = './data/train/cifar100_train.json'
     test_path = './data/test/cifar100_test.json'
@@ -266,15 +281,14 @@ def read_cifar100_data():
     y = [[] for _ in range(NUM_USERS)]
     idx = np.zeros(100, dtype=np.int64)
     for user in range(NUM_USERS):
-        for j in range(NUM_LABELS):  # 3 labels for each users
-            #l = (2*user+j)%10
+        for j in range(NUM_LABELS):  # 
             l = (user + j) % 100
             # print("L:", l)
             X[user] += cifar100_data[l][idx[l]:idx[l]+10].tolist()
-            y[user] += (l*np.ones(100)).tolist()
+            y[user] += (l*np.ones(10)).tolist()
 
             # print("X[",user,"] :",X[user])
-            # print("y[",user,"] :",X[user])
+            # print("y[",user,"] :",y[user])
             # print("idx[",l,"] :",idx[l])
             # input("press")
             
@@ -284,37 +298,44 @@ def read_cifar100_data():
 
     # Assign remaining sample by power law
     user = 0
-    props = np.random.lognormal(0, 2., (100, NUM_USERS, NUM_LABELS))  
+    props = np.random.lognormal(-2, 2, (100, NUM_USERS, NUM_LABELS))  
     
+    # print("sm_props :",np.sum(props, (1, 2), keepdims=True))
+    # input("press 304")
+    print(np.array([[[len(v)-NUM_USERS]] for v in cifar100_data]))
+    # input()
     props = np.array([[[len(v)-NUM_USERS]] for v in cifar100_data]) * \
         props/np.sum(props, (1, 2), keepdims=True)
+    # print("Props :",props)
+    # input("press at 168")
     
-    # print(props)
-
-
     for user in trange(NUM_USERS):
         for j in range(NUM_LABELS):  # 4 labels for each users
             # l = (2*user+j)%10
             l = (user + j) % 100
             num_samples = int(props[l, user//int(NUM_USERS/100), j])
-            
+            print("depth :",l)
+            print("row :",user//int(NUM_USERS/100))
+            print("Column :",j)
+            print("num_samples",num_samples)
+            input("press")
             numran1 = random.randint(300, 600)
             num_samples = (num_samples)  + numran1 #+ 200
-            print(" num_samples", num_samples)
+            # print(" num_samples", num_samples)
 
 
             if(NUM_USERS <= 20): 
                 num_samples = num_samples * 2
-            print("len(cfar100_data[",l,"] :", len(cifar100_data[l]))
+            # print("len(cfar100_data[",l,"] :", len(cifar100_data[l]))
             if idx[l] + num_samples < len(cifar100_data[l]):
                 X[user] += cifar100_data[l][idx[l]:idx[l]+num_samples].tolist()
                 y[user] += (l*np.ones(num_samples)).tolist()
                 idx[l] += num_samples
 
-                print("X[",user,"] :",X[user])
-                print("y[",user,"] :",X[user])
+                # print("X[",user,"] :",X[user])
+                print("y[",user,"] :",y[user])
                 print("idx[",l,"] :",idx[l])
-                input("press")
+                # input("press")
                 # print("check len os user:", user, j, "len data", len(X[user]), num_samples)
 
     # print("IDX2:", idx) # counting samples for each labels

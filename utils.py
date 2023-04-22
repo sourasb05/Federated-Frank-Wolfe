@@ -636,10 +636,10 @@ def read_EMnist_data():
     Letters contains 26 classes,
 
     """
-    trainset = torchvision.datasets.EMNIST(root='./data', train=True,download=True, transform=transform)
-    testset = torchvision.datasets.EMNIST(root='./data', train=False,download=True, transform=transform)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=len(trainset.data),shuffle=False)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=len(testset.data),shuffle=False)
+    trainset = torchvision.datasets.EMNIST(root='./data', train=True, split='digits', download=True, transform=transform)
+    testset = torchvision.datasets.EMNIST(root='./data', train=False,split='digits', download=True, transform=transform)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=len(trainset.data), shuffle=False)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=len(testset.data), shuffle=False)
 
     """
     enumerate(iterable, start=0)
@@ -654,7 +654,7 @@ def read_EMnist_data():
 
     random.seed(1)
     np.random.seed(1)
-    NUM_USERS = 1000 # should be muitiple of 10
+    NUM_USERS = 100 # should be muitiple of 10
     NUM_LABELS = 10
     # Setup directory for train/test data
     train_path = './data/train/emnist_train.json'
@@ -717,7 +717,11 @@ def read_EMnist_data():
         for j in range(NUM_LABELS):  # 4 labels for each users
             # l = (2*user+j)%10
             l = (user + j) % 10
+            
             num_samples = int(props[l, user//int(NUM_USERS/10), j])
+            print(num_samples)
+            # print("j = ",j)
+            # input("press")
             numran1 = random.randint(300, 600)
             num_samples = (num_samples)  + numran1 #+ 200
             if(NUM_USERS <= 20): 
@@ -761,14 +765,13 @@ def read_EMnist_data():
 def read_Celeba_data():
     # Define transformations to be applied to the input images
     transform = transforms.Compose([ 
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
+        transforms.Resize((64,64)),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ])
 
-    trainset = torchvision.datasets.CelebA(root='./data', train=True,download=True, transform=transform)
-    testset = torchvision.datasets.CelebA(root='./data', train=False,download=True, transform=transform)
+    trainset = torchvision.datasets.CelebA(root='./data', split='train', download=True, transform=transform)
+    testset = torchvision.datasets.CelebA(root='./data', split='test', download=True, transform=transform)
     trainloader = torch.utils.data.CelebA(trainset, batch_size=len(trainset.data),shuffle=False)
     testloader = torch.utils.data.CelebA(testset, batch_size=len(testset.data),shuffle=False)
 
@@ -1094,6 +1097,11 @@ def read_data(dataset):
     elif(dataset == "EMNIST"):
         clients, train_data, test_data = read_EMnist_data()
         return clients, train_data, test_data
+
+    elif(dataset == 'CELEBA'):
+        clients, train_data, test_data = read_Celeba_data()
+        return clients, train_data, test_data
+
 
     elif(dataset == "MOVIELENS_1m"):
         data = read_MovieLens_data("ml-1m")

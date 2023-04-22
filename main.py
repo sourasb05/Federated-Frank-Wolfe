@@ -89,7 +89,7 @@ def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size, glob
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--dataset", type=str, default="CIFAR10", choices=["MNIST", "FMNIST", "CIFAR10", "EMNIST", "CIFAR100", "SYNTHETIC", "MOVIELENS_1m", "MOVIELENS_100k"])
+    parser.add_argument("--dataset", type=str, default="CIFAR10", choices=["MNIST", "FMNIST", "CIFAR10", "EMNIST", "CIFAR100", "CELEBA", "SYNTHETIC", "MOVIELENS_1m", "MOVIELENS_100k"])
     parser.add_argument("--model", type=str, default="CNN")
     parser.add_argument("--times", type=int, default=1 )
     parser.add_argument("--fl_algorithm", type=str, default= "FedAvg")

@@ -1107,6 +1107,7 @@ def read_data(dataset):
         data = read_MovieLens_data("ml-1m")
         return data
     elif(dataset == "MOVIELENS_100k"):
+        print("at utils")
         data = read_MovieLens_data("ml-100k")
         return data
     else:

@@ -86,16 +86,15 @@ class Fed_Avg_Client():
             return torch.mul(torch.div(x, l2_norm), radius)
 
 
-    def Projection_l1(x, alpha):
-        shape = x.shape
-        x = x.reshape(-1)
-        proj = euclidean_proj_l1ball(x, alpha)
+    """def Projection_l1(x, alpha):
+            shape = x.shape
+            x = x.reshape(-1)
+            proj = euclidean_proj_l1ball(x, alpha)
         return proj.reshape(*shape)
-
-
-    def Projection_l2(x, alpha):
-        return x / max(alpha, np.linalg.norm(x, 2))
-
+        
+        def Projection_l2(x, alpha):
+            return x / max(alpha, np.linalg.norm(x, 2))
+"""
 
         
     def projection(self):

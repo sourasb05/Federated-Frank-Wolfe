@@ -159,15 +159,15 @@ def read_cifar10_data():
     # Assign remaining sample by power law
     user = 0
     props = np.random.lognormal( 0, 2., (10, NUM_USERS, NUM_LABELS)) 
-    print(props) 
-    print(len(props))
-    input("press")
+    # print(props) 
+    # print(len(props))
+    # input("press")
     props = np.array([[[len(v)-NUM_USERS]] for v in cifa_data]) * \
         props/np.sum(props, (1, 2), keepdims=True)
-    print("Props :",props)
-    input("press at 168")
+    # print("Props :",props)
+    # input("press at 168")
     # print("here:",props/np.sum(props,(1,2), keepdims=True))
-    #props = np.array([[[len(v)-100]] for v in mnist_data]) * \
+    #props = np.array([[[len(v)-100]] for v in mnist_data]) * \ 
     #    props/np.sum(props, (1, 2), keepdims=True)
     #idx = 1000*np.ones(10, dtype=np.int64)
     # print("here2:",props)
@@ -175,9 +175,9 @@ def read_cifar10_data():
         for j in range(NUM_LABELS):  # 4 labels for each users
             # l = (2*user+j)%10
             l = (user + j) % 10
-            print("l :",l)
-            print(props[l, user//int(NUM_USERS/10), j])
-            input("press at 180")
+            # print("l :",l)
+            # print(props[l, user//int(NUM_USERS/10), j])
+            # input("press at 180")
             num_samples = int(props[l, user//int(NUM_USERS/10), j])
             numran1 = random.randint(300, 600)
             num_samples = (num_samples)  + numran1 #+ 200
@@ -314,11 +314,11 @@ def read_cifar100_data():
             # l = (2*user+j)%10
             l = (user + j) % 100
             num_samples = int(props[l, user//int(NUM_USERS/100), j])
-            print("depth :",l)
-            print("row :",user//int(NUM_USERS/100))
-            print("Column :",j)
-            print("num_samples",num_samples)
-            input("press")
+            # print("depth :",l)
+            # print("row :",user//int(NUM_USERS/100))
+            # print("Column :",j)
+            # print("num_samples",num_samples)
+            # input("press")
             numran1 = random.randint(300, 600)
             num_samples = (num_samples)  + numran1 #+ 200
             # print(" num_samples", num_samples)
@@ -333,8 +333,8 @@ def read_cifar100_data():
                 idx[l] += num_samples
 
                 # print("X[",user,"] :",X[user])
-                print("y[",user,"] :",y[user])
-                print("idx[",l,"] :",idx[l])
+                # print("y[",user,"] :",y[user])
+                # print("idx[",l,"] :",idx[l])
                 # input("press")
                 # print("check len os user:", user, j, "len data", len(X[user]), num_samples)
 
@@ -719,7 +719,7 @@ def read_EMnist_data():
             l = (user + j) % 10
             
             num_samples = int(props[l, user//int(NUM_USERS/10), j])
-            print(num_samples)
+            # print(num_samples)
             # print("j = ",j)
             # input("press")
             numran1 = random.randint(300, 600)
@@ -976,7 +976,7 @@ def read_MovieLens_data(dataset_name):
     
     """
     train_data, test_data = MovieLensDataset(dataset_name)
-    print(train_data[0])
+    # print(train_data[0])
     
     UserID_train = np.array([x[0] for x in train_data])
     MovID_train = np.array([x[1] for x in train_data])
@@ -992,7 +992,7 @@ def read_MovieLens_data(dataset_name):
     nM = MovID_train.max() +1 # Movies
     nR = len(UserID_train) # Rating
 
-    print("nU :",nU,"nM :",nM,"nR :",nR)
+    # print("nU :",nU,"nM :",nM,"nR :",nR)
     
     A = coo_matrix((Rating_train, (MovID_train-1, UserID_train-1)), shape=(nM, nU))
     rDel = np.array(~A.getnnz(1)).ravel()  # rows
@@ -1011,13 +1011,13 @@ def read_MovieLens_data(dataset_name):
     nU = int(np.max(UserID_train))  # # Users
     nM = int(np.max(MovID_test))  # # Movies
     
-    print("nU :",nU,"nM :",nM,"nR :",nR)
+    # print("nU :",nU,"nM :",nM,"nR :",nR)
     
     
     client_num = 10  # # Clients
     client_data = nR // client_num  # # Clients' data
     
-    print("client_data :",client_data)
+    # print("client_data :",client_data)
 
     # Random permutation
     p = np.random.permutation(nR)

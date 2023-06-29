@@ -1,52 +1,46 @@
-import torch 
-import os
 import copy
-from client import *
-from utils import *
-import numpy as np
+from tqdm import trange
+from src.utils.utils import select_users
 
-
-# implementation of FedAvg server
-
-
-class Fed_Avg_Server():
-    def __init__(self, aggregator_name, model):
-        self.global_model = copy.deepcopy(model[0])
+class FedFW_Server():
+    def __init__(self, aggregator_name, model, global_iters):
+        self.x_bar_t = copy.deepcopy(model[0])
+        self.s_it_agg = copy.deepcopy(model[0])
         self.aggregator_name = aggregator_name
+        self.global_iters = global_iters
         
     def global_update(self, users, selected_users): 
         
-        
-        N = len(selected_users)
-
-        # for param in self.global_model.parameters():
-        #    param.data = torch.zeros_like(param.data)
-        
         for user in selected_users:
-            param_size_g_param = []
-            param_size_l_param = []
-            for g_param, l_param in  zip(self.global_model.parameters(), user.local_model.parameters()):
-                param_size_g_param.append(len(g_param.view(-1)))
-                param_size_l_param.append(len(l_param.view(-1)))
-            
-        for user in selected_users:
-            for g_param, l_param in  zip(self.global_model.parameters(), user.local_model.parameters()):
-                if self.aggregator_name == "simple_averaging":
-                    # print("g_param:",g_param.data)
-                    # print("l_param:",l_param.data)
-                    # input("press")
-                    g_param.data = g_param.data + (1/N) * l_param.data 
-                elif self.aggregator_name == "weighted_averaging":
-                    g_param.data = g_param.data + user.data_ratio * l_param.data
-                else:
-                    assert(f"Assertion Error: no aggregator found")
-    
+            for s_it_param, x_it_param in zip(self.s_it_agg.parameters(), user.x_it.parameters()):
+                s_it_param.data += x_it_param.data
+        
+        
+        self.s_it_agg.data = self.eta_t*(self.s_it.agg.data/len(selected_users))
+        
+        for x_bar_t_param, s_param in  zip(self.x_bar_t.parameters(), self.s_it_agg.parameters()):
+                x_bar_t_param.data = (1 - self.eta_t)*x_bar_t_param.data + s_param.data   
+                
     def send_parameters(self, users):   
         if len(users) == 0:
             assert(f"AssertionError : The client can't be zero")
         else:
             for user in users:
-                user.set_parameters(self.global_model)
+                user.set_parameters(self.x_bar_t)
+
+    
+    def train(self, users):
+        for iter in trange(self.global_iters):
+            
+            self.send_parameters(users)   # server send parameters to every users
+            self.evaluate(users)  # evaluate global model
+            selected_users = select_users(users)
+            #print("len of selected users",len(selected_users))
+            for user in selected_users:
+                user.local_train(self.x_bar_t)
+            
+            self.global_update(users, selected_users)
+
                 
     def evaluate(self, users):
         tot_train_loss = 0
@@ -90,6 +84,3 @@ class Fed_Avg_Server():
         print("Average test loss :", avg_test_loss.item())
         print("Average train accuracy :", avg_train_accuracy)
         print("Average test accuracy :", avg_test_accuracy)
-        
-       
-        

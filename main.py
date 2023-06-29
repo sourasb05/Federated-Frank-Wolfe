@@ -1,19 +1,21 @@
 from model import *
-from server import Fed_Avg_Server
-from client import Fed_Avg_Client
-from utils import select_users, read_data, read_user_data #, RMSE_nuclear
+from src.server.FedAvg_server import Fed_Avg_Server
+from src.server.FedFW_server import FedFW_Server
+from src.client.FedAvg_client import Fed_Avg_Client
+from src.client.FedFW_client import FedFW_Client
+from src.utils.utils import select_users, read_data, read_user_data #, RMSE_nuclear
 from src.MatrixComp import My_matrix_comp
 import argparse
 import torch.nn as nn 
 
-def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size, glob_iters, local_iters, batch_size, times, gpu):
+def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size,lambda_t, kappa, global_iters, local_iters, batch_size, times, gpu):
     exp_no=0
 
     device = torch.device("cuda:{}".format(gpu) if torch.cuda.is_available() and gpu != -1 else "cpu")
     
     while exp_no < times:
     
-        if model == "CNN" or model == "MCLR" or model == "DNN" or model == "LASSO":
+        if model in ["CNN", "MCLR", "DNN", "LASSO"]:
             
             if model == "CNN":
                 if dataset == "MNIST":
@@ -50,7 +52,7 @@ def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size, glob
                 data = read_data(dataset)
                 # print(data)
                 r = My_matrix_comp.matrix_comp(data)
-                input("press")
+                # input("press")
             problem_category = 2
         
     
@@ -67,7 +69,6 @@ def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size, glob
                 users = []   # the list of the object of the users
                 data = read_data(dataset) 
                 # print(data)
-                input("interrupt from line 50 in main")
 
                 # print("len_data",len(data[1]))
                 # input("press")
@@ -89,8 +90,35 @@ def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size, glob
                     user = Fed_Avg_Client(model, optimizer, loss, train, test, local_iters, step_size, batch_size, data_ratio, device)   # Creating the instance of the users. 
                     users.append(user)
                 # print(users)
+
+
+            if fl_algorithm == "FedFW":
+                users = []
+                data = read_data(dataset)
+                total_users = len(data[0])  
+                server = FedFW_Server(fl_aggregator, model, global_iters)
+                for i in range(0,total_users):
+                    train, test = read_user_data(i,data,dataset)
+                    data_ratio = len(data[1])/len(train)
+                    user = FedFW_Client(model, 
+                                        optimizer, 
+                                        loss, 
+                                        total_users,
+                                        train, 
+                                        test, 
+                                        local_iters, 
+                                        step_size, 
+                                        lambda_t,
+                                        kappa,
+                                        batch_size, 
+                                        data_ratio, 
+                                        device)   # Creating the instance of the users. 
+                   
+                    users.append(user)
+            
+            server.train(users)
                 
-            for i in range(0,glob_iters):
+            """for i in range(0,glob_iters):
                 print("----- Global iteration [",i,"]-----")
                 server.send_parameters(users)   # server send parameters to every users
                 server.evaluate(users)  # evaluate global model
@@ -99,7 +127,7 @@ def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size, glob
                 for user in selected_users:
                     user.local_train()
 
-                server.global_update(users, selected_users)
+                server.global_update(users, selected_users)"""
                 
 
 
@@ -112,9 +140,11 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="CIFAR10", choices=["MNIST", "FMNIST", "CIFAR10", "EMNIST", "CIFAR100", "CELEBA", "SYNTHETIC", "MOVIELENS_1m", "MOVIELENS_100k"])
     parser.add_argument("--model", type=str, default="CNN")
     parser.add_argument("--times", type=int, default=1 )
-    parser.add_argument("--fl_algorithm", type=str, default= "FedAvg")
-    parser.add_argument("--optimizer", type=str, default="GD", choices=["GD", "SGD", "PGD", "PSGD"])
+    parser.add_argument("--fl_algorithm", type=str, default= "FedFW")
+    parser.add_argument("--optimizer", type=str, default="GD", choices=["FW","GD", "SGD", "PGD", "PSGD"])
     parser.add_argument("--step_size", type=float, default=0.01)
+    parser.add_argument("--lambda_t", type=float, default=0.01)
+    parser.add_argument("--kappa", type=float,  default=0.01)
     parser.add_argument("--glob_iters", type=int, default=10)
     parser.add_argument("--local_iters", type=int, default=1)
     parser.add_argument("--batch_size", type=int, default=124)
@@ -131,6 +161,9 @@ if __name__ == "__main__":
     print("optimizer: {}".format(args.optimizer))
     print("Aggregator: {}".format(args.fl_aggregator))
     print("Step_size: {}".format(args.step_size))
+    print("lambda_t: {}".format(args.lambda_t))
+    print("kappa: {}".format(args.kappa))
+    
     print("Batch size: {}".format(args.batch_size))
     print("Global_iters: {}".format(args.glob_iters))
     print("Local_iters: {}".format(args.local_iters))
@@ -146,7 +179,9 @@ if __name__ == "__main__":
         optimizer=args.optimizer,
         fl_aggregator = args.fl_aggregator,
         step_size=args.step_size,
-        glob_iters=args.glob_iters,
+        lambda_t = args.lambda_t,
+        kappa=args.kappa,
+        global_iters=args.glob_iters,
         local_iters=args.local_iters,
         batch_size = args.batch_size,
         times=args.times,

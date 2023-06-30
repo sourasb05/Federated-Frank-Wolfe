@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import random
 from torch.utils.data import DataLoader
-from src.utils.oracles import LMO_l1
+from src.utils.oracles import LMO_l1, LMO_l2
 from src.Optimizer import FW
 
 class FedFW_Client():
@@ -27,11 +27,14 @@ class FedFW_Client():
         self.x_it = copy.deepcopy(model[0])
         self.g_it = copy.deepcopy(model[0])
         self.x_bar_t = copy.deepcopy(model[0])
-
+        self.s_it = copy.deepcopy(model[0])
+        self.eval_model = copy.deepcopy(model[0])
         self.train_samples = len(train_set)
         self.test_samples = len(test_set)
         self.local_iters = local_iters
         self.eta_t = eta_t
+        # print("eta_t :", self.eta_t)
+        # input("press")
         self.lambda_t = lambda_t
         self.kappa = kappa
         self.batch_size = batch_size
@@ -46,7 +49,9 @@ class FedFW_Client():
         self.testloaderfull = DataLoader(test_set, self.test_samples)
         self.trainloaderfull = DataLoader(train_set, self.train_samples)
         self.iter_trainloader = iter(self.trainloader)   
-        self.iter_testloader = iter(self.testloader)      
+        self.iter_testloader = iter(self.testloader)   
+        self.iter_trainloaderfull = iter(self.trainloaderfull)   
+        self.iter_testloaderfull = iter(self.testloaderfull)      
         
         self.participation_prob = 1.0
         self.n = n # number of participating clients
@@ -65,13 +70,13 @@ class FedFW_Client():
         try:
         # get a new batch
             # print("iter trainloader",self.iter_trainloader)
-            (X,y) = next(self.iter_trainloader)
+            (X,y) = next(self.iter_trainloaderfull)
             return (X.to(self.device), y.to(self.device))        
 
         except StopIteration:
              # restart the generator if the previous generator is exhausted.
-            self.iter_trainloader = iter(self.trainloader)
-            (X, y) = next(self.iter_trainloader)
+            self.iter_trainloaderfull = iter(self.trainloaderfull)
+            (X, y) = next(self.iter_trainloaderfull)
         return (X.to(self.device), y.to(self.device))
         
     def set_parameters(self, glob_model):
@@ -82,22 +87,26 @@ class FedFW_Client():
     def FW_LMO(self):
         all_param= [] 
         param_size = []
-        for j, param in enumerate(self.x_it.parameters()):
+        for j, param in enumerate(self.g_it.parameters()):
           
             all_param.append(param.data.view(-1))
             param_size.append(len(param.data.view(-1)))
           
         param_concat = torch.cat(all_param, dim=0)
-        s_it = LMO_l1(param_concat, self.kappa)
-    
-        
-        param_proj = torch.split(s_it, param_size, dim=0)
+        lmo_s_it = LMO_l1(param_concat.cpu().numpy(), self.kappa)
+        lmo_s_it = torch.from_numpy(lmo_s_it)
+        # print(s_it)
+        # input("press")
+        param_proj = torch.split(lmo_s_it, param_size, dim=0)
         param_size_now = []
-
-        for proj , param in zip(param_proj, self.x_it.parameters()):
+        #print(param_proj)
+        #input("press")
+        for proj , param in zip(param_proj, self.s_it.parameters()):
             parameter_size = param.shape
             param.data = proj.view(*parameter_size)
-        
+            # print(param.data)
+        #print(self.s_it.parameters())
+        #input("press")
             # print("After projection :", param.data)
 
 
@@ -111,30 +120,38 @@ class FedFW_Client():
             output = self.x_it(X)
             loss = self.loss(output, y)
             loss.backward()
-            self.g_it = self.optimizer.step(self.g_it, self.x_it, x_bar_t, self.n, self.lambda_t)
-            self.s_it = self.FW_LMO()
+            self.optimizer.step(self.g_it, self.x_it, x_bar_t, self.n, self.lambda_t)
+            self.FW_LMO()
+            self.s_it.to(self.device)
+            
             for x_it_param , s_it_param in zip(self.x_it.parameters(), self.s_it.parameters()):
                 x_it_param.data = (1-self.eta_t)*x_it_param.data + self.eta_t*s_it_param.data
 
-    def global_eval_train_data(self):
-        self.x_it.eval()
+    def update_parameters(self, new_params):
+        for param, new_param in zip(self.eval_model.parameters(), new_params):
+            param.data = new_param.data.clone()
+
+    def global_eval_train_data(self, global_update):
+        self.eval_model.eval()
         train_acc = 0
         loss = 0
+        self.update_parameters(global_update.parameters())
         for x, y in self.trainloaderfull:
             x, y = x.to(self.device), y.to(self.device)
-            output = self.x_it(x)
+            output = self.eval_model(x)
             train_acc += (torch.sum(torch.argmax(output, dim=1) == y)).item()
             loss += self.loss(output, y)
             # avg_test_acc = test_acc / y.shape[0]
         return train_acc, y.shape[0], loss
 
-    def global_eval_test_data(self):
-        self.x_it.eval()
+    def global_eval_test_data(self, global_update):
+        self.eval_model.eval()
         test_acc = 0
         loss = 0
+        self.update_parameters(global_update.parameters())
         for x, y in self.testloaderfull:
             x, y = x.to(self.device), y.to(self.device)
-            output = self.x_it(x)
+            output = self.eval_model(x)
             test_acc += (torch.sum(torch.argmax(output, dim=1) == y)).item()
             loss += self.loss(output, y)
             # avg_test_acc = test_acc / y.shape[0]

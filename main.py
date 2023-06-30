@@ -8,7 +8,7 @@ from src.MatrixComp import My_matrix_comp
 import argparse
 import torch.nn as nn 
 
-def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size,lambda_t, kappa, global_iters, local_iters, batch_size, times, gpu):
+def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size,lambda_0, kappa, global_iters, local_iters, batch_size, times, gpu):
     exp_no=0
 
     device = torch.device("cuda:{}".format(gpu) if torch.cuda.is_available() and gpu != -1 else "cpu")
@@ -18,6 +18,12 @@ def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size,lambd
         if model in ["CNN", "MCLR", "DNN", "LASSO"]:
             
             if model == "CNN":
+                eta_t = 1 / global_iters ** (2/3)
+                print("eta_t :",eta_t)
+                T = global_iters ** (1/3)
+                print("T :",T)
+                lambda_t = lambda_0 * T
+                print("lambda_t :",lambda_t)
                 if dataset == "MNIST":
                     model = cnn_Mnist().to(device), model
                     loss = nn.NLLLoss()
@@ -29,6 +35,7 @@ def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size,lambd
                 elif dataset == "CIFAR10":
                     model = cnn_Cifar10().to(device), model
                     loss = nn.NLLLoss()
+                    
                     
                 elif dataset == "EMNIST":
                     model = cnn_Emnist().to(device), model
@@ -96,7 +103,7 @@ def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size,lambd
                 users = []
                 data = read_data(dataset)
                 total_users = len(data[0])  
-                server = FedFW_Server(fl_aggregator, model, global_iters)
+                server = FedFW_Server(fl_aggregator, model, global_iters, eta_t)
                 for i in range(0,total_users):
                     train, test = read_user_data(i,data,dataset)
                     data_ratio = len(data[1])/len(train)
@@ -107,7 +114,7 @@ def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size,lambd
                                         train, 
                                         test, 
                                         local_iters, 
-                                        step_size, 
+                                        eta_t, 
                                         lambda_t,
                                         kappa,
                                         batch_size, 
@@ -137,14 +144,14 @@ def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size,lambd
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--dataset", type=str, default="CIFAR10", choices=["MNIST", "FMNIST", "CIFAR10", "EMNIST", "CIFAR100", "CELEBA", "SYNTHETIC", "MOVIELENS_1m", "MOVIELENS_100k"])
+    parser.add_argument("--dataset", type=str, default="MNIST", choices=["MNIST", "FMNIST", "CIFAR10", "EMNIST", "CIFAR100", "CELEBA", "SYNTHETIC", "MOVIELENS_1m", "MOVIELENS_100k"])
     parser.add_argument("--model", type=str, default="CNN")
     parser.add_argument("--times", type=int, default=1 )
     parser.add_argument("--fl_algorithm", type=str, default= "FedFW")
     parser.add_argument("--optimizer", type=str, default="GD", choices=["FW","GD", "SGD", "PGD", "PSGD"])
     parser.add_argument("--step_size", type=float, default=0.01)
-    parser.add_argument("--lambda_t", type=float, default=0.01)
-    parser.add_argument("--kappa", type=float,  default=0.01)
+    parser.add_argument("--lambda_0", type=float, default=0.0001)
+    parser.add_argument("--kappa", type=float,  default=7.0)
     parser.add_argument("--glob_iters", type=int, default=10)
     parser.add_argument("--local_iters", type=int, default=1)
     parser.add_argument("--batch_size", type=int, default=124)
@@ -161,7 +168,7 @@ if __name__ == "__main__":
     print("optimizer: {}".format(args.optimizer))
     print("Aggregator: {}".format(args.fl_aggregator))
     print("Step_size: {}".format(args.step_size))
-    print("lambda_t: {}".format(args.lambda_t))
+    print("lambda_0: {}".format(args.lambda_0))
     print("kappa: {}".format(args.kappa))
     
     print("Batch size: {}".format(args.batch_size))
@@ -179,7 +186,7 @@ if __name__ == "__main__":
         optimizer=args.optimizer,
         fl_aggregator = args.fl_aggregator,
         step_size=args.step_size,
-        lambda_t = args.lambda_t,
+        lambda_0 = args.lambda_0,
         kappa=args.kappa,
         global_iters=args.glob_iters,
         local_iters=args.local_iters,

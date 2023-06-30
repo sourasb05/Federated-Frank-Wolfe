@@ -1,5 +1,6 @@
 import torch
 from torch.optim import Optimizer, sgd
+from src.client import FedFW_client
 from src.utils.oracles import LMO_l1
 
 
@@ -25,6 +26,9 @@ class FW(Optimizer):
 
         for g_it_param, x_it_param , x_bar_t_param in zip(g_it.parameters(), x_it.parameters(), x_bar_t.parameters()):
             g_it_param.data = x_it_param.grad.data*(1/n) + lambda_t*(x_it_param.data -x_bar_t_param.data)
+        
+        FedFW_client.FW_LMO()
+
         
         return g_it
                 

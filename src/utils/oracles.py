@@ -10,6 +10,15 @@ def LMO_l1(grad, kappa):
     s[coord] = kappa * np.sign(grad[coord])
     return - s.reshape(*shape)
 
+def LMO_l2(grad, kappa):
+    shape = grad.shape
+    grad = grad.reshape(-1)
+    l2_norm = np.linalg.norm(grad) 
+    # print("l2_norm :",l2_norm)
+    grad = (grad / l2_norm)*kappa
+    #print(grad)
+    #input("press")
+    return grad
 
 """def P_l1(grad, kappa):
     shape = grad.shape

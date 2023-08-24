@@ -10,7 +10,7 @@ class FedFW_Server():
         self.global_iters = global_iters
         self.eta_t = eta_t
         
-    def global_update(self, users, selected_users): 
+    def global_update(self,selected_users): 
         for param in self.x_bar_t.parameters():
             param.data.zero_()
         for user in selected_users:
@@ -27,16 +27,16 @@ class FedFW_Server():
 
     
     def train(self, users):
+        
         for iter in trange(self.global_iters):
-            
             self.send_parameters(users)   # server send parameters to every users
             self.evaluate(users)  # evaluate global model
             selected_users = select_users(users)
             print("number of selected users",len(selected_users))
             for user in selected_users:
-                user.local_train(self.x_bar_t)
+                user.local_train()
             
-            self.global_update(users, selected_users)
+            self.global_update(selected_users)
 
                 
     def evaluate(self, users):

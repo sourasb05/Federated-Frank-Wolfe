@@ -11,31 +11,27 @@ class FedFW_Client():
 
     def __init__(self, 
                 model, 
-                optimizer_name, 
-                loss, 
+                optimizer_name,
+                loss,
                 n,  # number of participating clients
                 train_set, 
                 test_set, 
                 local_iters, 
-                eta_t,  # learning rate
-                lambda_t,  # regularizer
+                lambda_0,  # regularizer
                 kappa, # Constraint 
                 batch_size, 
                 data_ratio, 
                 device):
         
-        self.x_it = copy.deepcopy(model[0])  # local model
-        self.x_bar_t = copy.deepcopy(model[0]) # global_model
+        self.x_it = copy.deepcopy(model)  # local model
+        self.x_bar_t = copy.deepcopy(model) # global_model
         
-        self.eval_model = copy.deepcopy(model[0]) # evaluate global model
+        self.eval_model = copy.deepcopy(model) # evaluate global model
         self.model_bar = copy.deepcopy(list(self.x_it.parameters()))
         self.train_samples = len(train_set)
         self.test_samples = len(test_set)
         self.local_iters = local_iters
-        self.eta_t = eta_t
-        # print("eta_t :", self.eta_t)
-        # input("press")
-        self.lambda_t = lambda_t
+        self.lambda_0 = lambda_0
         self.kappa = kappa
         self.batch_size = batch_size
         self.device = device
@@ -59,9 +55,9 @@ class FedFW_Client():
         # self.optimizer = FW(self.x_it.parameters(), eta_t=self.eta_t, kappa=self.kappa, device=self.device)
         self.optimizer = FedFW(self.x_it.parameters(),
                                 server_model=self.x_bar_t,
-                                lambda_0=lambda_t,
+                                lambda_0=self.lambda_0,
                                 num_client_iter=local_iters,
-                                step_direction_func=LMO_l1,
+                                step_direction_func=LMO_l2,
                                 alpha=100)
      
     def selection(self):

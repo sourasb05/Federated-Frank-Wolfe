@@ -1,7 +1,7 @@
 import torch
 from torch.optim import Optimizer, sgd
 from src.client import FedFW_client
-from src.utils.oracles import LMO_l1
+from src.utils.oracles import LMO_l1 , LMO_l2
 from typing import Callable
 import copy
 import math
@@ -54,9 +54,9 @@ class FedFW(Optimizer):
             for (server_p, p) in zip(self.server_model.parameters(), group['params']):
                 if p.grad is None:
                     continue
-                grad = p.grad.data
-                if grad.is_sparse:
-                    raise RuntimeError('FedFW does not support sparse gradients')
+                # grad = p.grad.data
+                # if grad.is_sparse:
+                #    raise RuntimeError('FedFW does not support sparse gradients')
                 state = self.state[p]
                 if len(state) == 0:
                     state['step'] = 1
@@ -68,22 +68,30 @@ class FedFW(Optimizer):
                 lambda_0 = group['lambda_0']
                 step_direction_func = group['step_direction_func']
                 alpha = group['alpha']
+                # print(alpha)
+                # input("press")
                 num_client_iter = group['num_client_iter']
 
                 # Compute eta_t and lambda_t
+                # print(step)
                 eta_t = 2 / (step + 1)
+                # print("eta_t :", eta_t)
                 lambda_t = lambda_0 * math.sqrt(step + 1)
-
+                # print("lambda_t :", lambda_t)
                 # Compute g_i^t
-                grad.mul_(1 / num_client_iter).add_(p.data - server_p.data, alpha=lambda_t)
+                # grad.mul_(1 / num_client_iter).add_(p.data - server_p.data, alpha=lambda_t)
+                grad = (1/ 10)*p.grad.data + lambda_t*(p.data - server_p.data)
                 # Compute step direction from g_i^t
                 fw_step_direction = step_direction_func(grad, alpha)
                 # print(fw_step_direction)
                 # input("press")
                 # x_i^{t + 1} = (1 - eta_t)*x_i^t + eta_t*s_i^t
                 p.data.mul_(1 - eta_t).add_(fw_step_direction, alpha=eta_t)
+                # p.data.mul_(1 - eta_t).add_(grad, alpha=eta_t)
+                # p.data = (1 -  eta_t)*p.data + eta_t*grad
+               #  p.data.mul_(1 - eta_t).add_(grad, alpha=eta_t)
                 state['step'] += 1
-                state["step_direction"] = fw_step_direction
+                # state["step_direction"] = fw_step_direction
                 state["eta_t"] = eta_t
         return loss
 

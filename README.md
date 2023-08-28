@@ -32,3 +32,22 @@ Convex settings
 1) Gradient descent
 2) Stochastic Gradient Descent
 3) Projected Gradient Descent
+
+
+# How to run
+
+If you are using berzelius gpus then first you have to start interactive session.
+
+ineractive --gpus= number_of_gpus -t hh:mm:sc --account=account_name
+
+example :
+
+interactive --gpus=1 -t 01:00:00 --account=berzelius-2023-106
+
+then activate the conda environment
+
+activate personalized_fl
+
+Now type the following:
+
+python main.py --dataset=MNIST --model=MCLR  

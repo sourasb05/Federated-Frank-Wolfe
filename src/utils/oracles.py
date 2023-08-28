@@ -16,12 +16,15 @@ def LMO_l1(grad, kappa):
 def LMO_l2(grad, kappa):
     shape = grad.shape
     grad = grad.reshape(-1)
-    l2_norm = np.linalg.norm(grad) 
+    # s = torch.zeros(grad.shape)
+    l2_norm = torch.linalg.norm(grad, ord=2, dim=None, keepdim=False)
+    
     # print("l2_norm :",l2_norm)
     grad = (grad / l2_norm)*kappa
     #print(grad)
     #input("press")
-    return grad
+    return - grad.reshape(*shape)
+    # return grad
 
 """def P_l1(grad, kappa):
     shape = grad.shape

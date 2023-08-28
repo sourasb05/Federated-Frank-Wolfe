@@ -55,41 +55,25 @@ class cnn_Cifar10(nn.Module):
 # CNN model for FMNIST
 
 class cnn_Fmnist(nn.Module):
-    
-    def __init__(self, args):
-        super(cnn_Fmnist, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5)
-        self.conv2 = nn.Conv2d(in_channels=6, out_channels=12, kernel_size=5)
-        self.fc1 = nn.Linear(in_features=12 * 4 * 4, out_features=120)
-        self.fc2 = nn.Linear(in_features=120, out_features=60)
-        self.fc3 = nn.Linear(in_features=60, out_features=40)
-        self.out = nn.Linear(in_features=40, out_features=10)
+  def __init__(self, args):
+    super(cnn_Fmnist, self).__init__()
+    self.conv1 = nn.Conv2d(1, 32, kernel_size=3, padding=1)
+    self.maxpool1 = nn.MaxPool2d(2, 2)
+    self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+    self.maxpool2 = nn.MaxPool2d(2, 2)
+    self.flatten = nn.Flatten()
+    self.dense1 = nn.Linear(3136, 128)
+    self.dense2 = nn.Linear(128, 10)
 
-    def forward(self, x):
-        # input layer
-        x = x
-        # first hidden layer
-        x = self.conv1(x)
-        x = F.relu(x)
-        x = F.max_pool2d(x, kernel_size=2, stride=2)
-        # second hidden layer
-        x = self.conv2(x)
-        x = F.relu(x)
-        x = F.max_pool2d(x, kernel_size=2, stride=2)
-        # third hidden layer
-        x = x.reshape(-1, 12 * 4 * 4)
-        x = self.fc1(x)
-        x = F.relu(x)
-        # fourth hidden layer
-        x = self.fc2(x)
-        x = F.relu(x)
-        # fifth hidden layer
-        x = self.fc3(x)
-        x = F.relu(x)
-        # output layer
-        x = self.out(x)
-        return x
-
+  def forward(self, x):
+    x = F.relu(self.conv1(x))
+    x = self.maxpool1(x)
+    x = F.relu(self.conv2(x))
+    x = self.maxpool2(x)
+    x = self.flatten(x)
+    x = F.relu(self.dense1(x))
+    x = self.dense2(x)
+    return x
 
 # DNN for Synthetic datasets
 

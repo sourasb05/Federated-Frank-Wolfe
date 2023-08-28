@@ -8,102 +8,119 @@ from src.MatrixComp import My_matrix_comp
 import argparse
 import torch.nn as nn 
 
-def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size,lambda_0, kappa, global_iters, local_iters, batch_size, times, gpu):
+def main(dataset, problem_type, model_name, fl_algorithm, optimizer, fl_aggregator, step_size,lambda_0, kappa, global_iters, local_iters, batch_size, times, gpu):
     exp_no=0
 
     device = torch.device("cuda:{}".format(gpu) if torch.cuda.is_available() and gpu != -1 else "cpu")
+    if problem_type == "MATRIX_COMP": problem_category = 1
+    elif problem_type == "QAP": problem_category = 2
+    else: problem_category = 3    
     
     while exp_no < times:
-    
-        if model in ["CNN", "MCLR", "DNN", "LASSO"]:
-            
-            if model == "CNN":
-                eta_t = 1 / global_iters ** (2/3)
-                print("eta_t :",eta_t)
-                # T = global_iters ** (1/3)
-                # print("T :",T)
-                lambda_t = lambda_0 * global_iters ** (1/3)
-                print("lambda_t :",lambda_t)
-                if dataset == "MNIST":
-                    model = cnn_Mnist().to(device), model
-                    loss = nn.NLLLoss()
-                        
-                elif dataset == "FMNIST":
-                    model = cnn_Fmnist().to(device), model
-                    loss = nn.NLLLoss()
 
-                elif dataset == "CIFAR10":
-                    model = cnn_Cifar10().to(device), model
-                    loss = nn.NLLLoss()
-                    
-                    
-                elif dataset == "EMNIST":
-                    model = cnn_Emnist().to(device), model
-                    loss = nn.NLLLoss()
-                    
-                elif dataset == "CELEBA":
-                    model = cnn_Celeba().to(device), model
-                    loss = nn.NLLLoss()
-
-                elif dataset == "CIFAR100":
-                    model = cnn_Cifar100().to(device), model
-                    loss = nn.NLLLoss()
-                        
-            elif model == "MCLR":
-
-                if(dataset == "human_activity"):
-                    model = Mclr_Logistic(561,6).to(device), model
-                elif(dataset == "gleam"):
-                    model = Mclr_Logistic(561,6).to(device), model
-                elif(dataset == "vehicle_sensor"):
-                    model = Mclr_Logistic(100,2).to(device), model
-                elif(dataset == "Synthetic"):
-                    model = Mclr_Logistic(60,10).to(device), model
-                elif(dataset == "EMNIST"):
-                    model = Mclr_Logistic(784,62).to(device), model
-                else:#(dataset == "Mnist"):
-                    model = Mclr_Logistic().to(device), model
-            
-            elif(model == "dnn"):
-                if(dataset == "human_activity"):
-                    model = DNN(561,100,12).to(device), model
-                elif(dataset == "gleam"):
-                    model = DNN(561,20,6).to(device), model
-                elif(dataset == "vehicle_sensor"):
-                    model = DNN(100,20,2).to(device), model
-                elif(dataset == "Synthetic"):
-                    model = DNN(60,20,10).to(device), model
-                elif(dataset == "EMNIST"):
-                    model = DNN(784,200,62).to(device), model
-                else:#(dataset == "Mnist"):
-                    model = DNN2().to(device), model
+        if problem_type == "MATRIX_COMP":
         
-
-            
-            
-            else:
-                print(" do nothing")
-            problem_category = 1
-
-        elif model == "MATRIX_COMP":
-            print("line 48")
             if  dataset == "MOVIELENS_100k" or dataset == "MOVIELENS_1m":
                 data = read_data(dataset)
                 # print(data)
                 r = My_matrix_comp.matrix_comp(data)
                 # input("press")
-            problem_category = 2
-        
-    
-        elif model == "QAP":
+            
             print("code building in progress....")
-
-
-
+    
         else:
-            print("do nothing")
+            
+            if model_name == "CNN":
+                
+                if dataset == "MNIST":
+                    model = cnn_Mnist().to(device)
+                    loss = nn.NLLLoss()
+                        
+                elif dataset == "FMNIST":
+                    model = cnn_Fmnist(10).to(device)
+                    loss = nn.CrossEntropyLoss()
 
-        if problem_category == 1:
+                elif dataset == "CIFAR10":
+                    model = cnn_Cifar10().to(device)
+                    loss = nn.NLLLoss()
+                    
+                    
+                elif dataset == "EMNIST":
+                    model = cnn_Emnist().to(device)
+                    loss = nn.NLLLoss()
+                    
+                elif dataset == "CELEBA":
+                    model = cnn_Celeba().to(device)
+                    loss = nn.NLLLoss()
+
+                elif dataset == "CIFAR100":
+                    model = cnn_Cifar100().to(device)
+                    loss = nn.CrossEntropyLoss()
+
+                        
+            elif model_name == "MCLR":
+
+                if(dataset == "human_activity"):
+                    model = Mclr_Logistic(561,6).to(device)
+                    loss = nn.NLLLoss()
+                elif(dataset == "gleam"):
+                    model = Mclr_Logistic(561,6).to(device)
+                    loss = nn.NLLLoss()
+                elif(dataset == "vehicle_sensor"):
+                    model = Mclr_Logistic(100,2).to(device)
+                    loss = nn.NLLLoss()
+                elif(dataset == "Synthetic"):
+                    model = Mclr_Logistic(60,10).to(device)
+                    loss = nn.NLLLoss()
+                elif(dataset == "EMNIST"):
+                    model = Mclr_Logistic(784,62).to(device)
+                    loss = nn.NLLLoss()
+                elif(dataset == "FMNIST"):
+                    model = Mclr_Logistic(784,10).to(device)
+                    loss = nn.NLLLoss() 
+
+                elif(dataset == "CIFAR10"):
+                    model = Mclr_Logistic(3072,10).to(device)
+                    loss = nn.NLLLoss() 
+                
+                elif(dataset == "CIFAR100"):
+                    model = Mclr_Logistic(3072,100).to(device)
+                    loss = nn.NLLLoss() 
+
+                else:#(dataset == "Mnist"):
+                    model = Mclr_Logistic().to(device)
+                    loss = nn.CrossEntropyLoss()
+                    print(model)
+            
+            elif(model_name == "DNN"):
+                if(dataset == "human_activity"):
+                    model = DNN(561,100,12).to(device)
+                    loss = nn.NLLLoss()
+                elif(dataset == "gleam"):
+                    model = DNN(561,20,6).to(device), model
+                    loss = nn.NLLLoss()
+                elif(dataset == "vehicle_sensor"):
+                    model = DNN(100,20,2).to(device), model
+                    loss = nn.NLLLoss()
+                elif(dataset == "Synthetic"):
+                    model = DNN(60,20,10).to(device), model
+                    loss = nn.NLLLoss()
+                elif(dataset == "EMNIST"):
+                    model = DNN(784,200,62).to(device), model
+                    loss = nn.NLLLoss()
+                else:#(dataset == "Mnist"):
+                    model = DNN2().to(device), model
+                    loss = nn.NLLLoss()
+        
+
+            
+            
+            else:
+                print(" No problem selected")
+           
+        
+
+        if problem_category == 3:
             if fl_algorithm == "FedAvg":
                 users = []   # the list of the object of the users
                 data = read_data(dataset) 
@@ -135,19 +152,27 @@ def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size,lambd
                 users = []
                 data = read_data(dataset)
                 total_users = len(data[0])  
-                server = FedFW_Server(fl_aggregator, model, global_iters, eta_t)
+                server = FedFW_Server(fl_aggregator,
+                                      fl_algorithm,
+                                      model,
+                                      model_name,
+                                      dataset,
+                                      global_iters,
+                                      lambda_0,
+                                      kappa,
+                                      exp_no
+                                      )
                 for i in range(0,total_users):
                     train, test = read_user_data(i,data,dataset)
                     data_ratio = len(data[1])/len(train)
                     user = FedFW_Client(model, 
-                                        optimizer, 
-                                        loss, 
+                                        optimizer,
+                                        loss,
                                         total_users,
                                         train, 
                                         test, 
                                         local_iters, 
-                                        eta_t, 
-                                        lambda_t,
+                                        lambda_0,
                                         kappa,
                                         batch_size, 
                                         data_ratio, 
@@ -156,6 +181,8 @@ def main(dataset, model, fl_algorithm, optimizer, fl_aggregator, step_size,lambd
                     users.append(user)
             
             server.train(users)
+            server.save_file()
+            server.plot_result()
                 
             """for i in range(0,glob_iters):
                 print("----- Global iteration [",i,"]-----")
@@ -177,13 +204,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--dataset", type=str, default="MNIST", choices=["MNIST", "FMNIST", "CIFAR10", "EMNIST", "CIFAR100", "CELEBA", "SYNTHETIC", "MOVIELENS_1m", "MOVIELENS_100k"])
-    parser.add_argument("--model", type=str, default="CNN")
+    parser.add_argument("--problem_type", type=str, default="NN", choices=["QAP", "NN", "Matrix_completion"])
+    parser.add_argument("--model_name", type=str, default="MCLR",  choices=["CNN", "MCLR", "DNN"])
     parser.add_argument("--times", type=int, default=1 )
     parser.add_argument("--fl_algorithm", type=str, default= "FedFW")
-    parser.add_argument("--optimizer", type=str, default="GD", choices=["FW","GD", "SGD", "PGD", "PSGD"])
-    parser.add_argument("--step_size", type=float, default=0.1)
-    parser.add_argument("--lambda_0", type=float, default=0.0001)
-    parser.add_argument("--kappa", type=float,  default=7.0)
+    parser.add_argument("--optimizer", type=str, default="FW", choices=["FW","GD", "SGD", "PGD", "PSGD"])
+    parser.add_argument("--step_size", type=float, default=0.05)
+    parser.add_argument("--lambda_0", type=float, default=0.0000001)
+    parser.add_argument("--kappa", type=float,  default=5.0)
     parser.add_argument("--glob_iters", type=int, default=100)
     parser.add_argument("--local_iters", type=int, default=1)
     parser.add_argument("--batch_size", type=int, default=124)
@@ -196,7 +224,7 @@ if __name__ == "__main__":
     print("=" * 60)
     print("Summary of training process:")
     print("FL Algorithm: {}".format(args.fl_algorithm))
-    print("model: {}".format(args.model))
+    print("model: {}".format(args.model_name))
     print("optimizer: {}".format(args.optimizer))
     print("Aggregator: {}".format(args.fl_aggregator))
     print("Step_size: {}".format(args.step_size))
@@ -213,7 +241,8 @@ if __name__ == "__main__":
 
 
     main(dataset=args.dataset,
-        model=args.model,
+        problem_type=args.problem_type,
+        model_name=args.model_name,
         fl_algorithm=args.fl_algorithm,
         optimizer=args.optimizer,
         fl_aggregator = args.fl_aggregator,

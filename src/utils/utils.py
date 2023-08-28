@@ -241,7 +241,7 @@ def read_cifar100_data():
     random.seed(1)
     np.random.seed(1)
     NUM_USERS = 100 # should be muitiple of 10
-    NUM_LABELS = 10
+    NUM_LABELS = 2
     # Setup directory for train/test data
     train_path = './data/train/cifar100_train.json'
     test_path = './data/test/cifar100_test.json'
@@ -310,7 +310,7 @@ def read_cifar100_data():
     # input("press at 168")
     
     for user in trange(NUM_USERS):
-        for j in range(NUM_LABELS):  # 4 labels for each users
+        for j in range(NUM_LABELS): 
             # l = (2*user+j)%10
             l = (user + j) % 100
             num_samples = int(props[l, user//int(NUM_USERS/100), j])
@@ -319,7 +319,7 @@ def read_cifar100_data():
             # print("Column :",j)
             # print("num_samples",num_samples)
             # input("press")
-            numran1 = random.randint(300, 600)
+            numran1 = random.randint(300, 2000)
             num_samples = (num_samples)  + numran1 #+ 200
             # print(" num_samples", num_samples)
 
@@ -369,10 +369,10 @@ def read_cifar100_data():
     return train_data['users'], train_data['user_data'], test_data['user_data']
 
 def read_FMnist_data():
-    transform = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+    transform = transforms.Compose([transforms.ToTensor(),transforms.Normalize([0.5], [0.5])])
 
-    trainset = torchvision.datasets.FMNIST(root='./data', train=True,download=True, transform=transform)
-    testset = torchvision.datasets.FMNIST(root='./data', train=False,download=True, transform=transform)
+    trainset = torchvision.datasets.FashionMNIST(root='./data', train=True,download=True, transform=transform)
+    testset = torchvision.datasets.FashionMNIST(root='./data', train=False,download=True, transform=transform)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=len(trainset.data),shuffle=False)
     testloader = torch.utils.data.DataLoader(testset, batch_size=len(testset.data),shuffle=False)
 
@@ -389,7 +389,7 @@ def read_FMnist_data():
 
     random.seed(1)
     np.random.seed(1)
-    NUM_USERS = 1000 # should be muitiple of 10
+    NUM_USERS = 100 # should be muitiple of 10
     NUM_LABELS = 10
     # Setup directory for train/test data
     train_path = './data/train/mnist_train.json'
@@ -516,7 +516,7 @@ def read_Mnist_data():
     random.seed(1)
     np.random.seed(1)
     NUM_USERS = 10 # should be muitiple of 10
-    NUM_LABELS = 3
+    NUM_LABELS = 10
     # Setup directory for train/test data
     train_path = './data/train/mnist_train.json'
     test_path = './data/test/mnist_test.json'

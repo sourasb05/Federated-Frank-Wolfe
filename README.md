@@ -33,6 +33,18 @@ Convex settings
 2) Stochastic Gradient Descent
 3) Projected Gradient Descent
 
+# Requirement
+
+numpy : conda install -c anaconda numpy
+
+matplotlib : conda install matplotlib
+
+torch and torchvision : conda install -c pytorch torchvision
+
+tqdm : conda install -c conda-forge tqdm
+
+
+
 
 # How to run
 

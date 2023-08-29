@@ -8,7 +8,7 @@ from src.MatrixComp import My_matrix_comp
 import argparse
 import torch.nn as nn 
 
-def main(dataset, problem_type, model_name, fl_algorithm, optimizer, fl_aggregator, step_size,lambda_0, kappa, global_iters, local_iters, batch_size, times, gpu):
+def main(dataset, problem_type, model_name, fl_algorithm, optimizer, fl_aggregator, step_size,lambda_0, kappa, global_iters, local_iters, batch_size, times, gpu, num_users, num_labels):
     exp_no=0
 
     device = torch.device("cuda:{}".format(gpu) if torch.cuda.is_available() and gpu != -1 else "cpu")
@@ -69,7 +69,7 @@ def main(dataset, problem_type, model_name, fl_algorithm, optimizer, fl_aggregat
                 elif(dataset == "vehicle_sensor"):
                     model = Mclr_Logistic(100,2).to(device)
                     loss = nn.NLLLoss()
-                elif(dataset == "Synthetic"):
+                elif(dataset == "SYNTHETIC"):
                     model = Mclr_Logistic(60,10).to(device)
                     loss = nn.NLLLoss()
                 elif(dataset == "EMNIST"):
@@ -102,7 +102,7 @@ def main(dataset, problem_type, model_name, fl_algorithm, optimizer, fl_aggregat
                 elif(dataset == "vehicle_sensor"):
                     model = DNN(100,20,2).to(device), model
                     loss = nn.NLLLoss()
-                elif(dataset == "Synthetic"):
+                elif(dataset == "SYNTHETIC"):
                     model = DNN(60,20,10).to(device), model
                     loss = nn.NLLLoss()
                 elif(dataset == "EMNIST"):
@@ -150,7 +150,8 @@ def main(dataset, problem_type, model_name, fl_algorithm, optimizer, fl_aggregat
 
             if fl_algorithm == "FedFW":
                 users = []
-                data = read_data(dataset)
+                print(dataset)
+                data = read_data(args)
                 total_users = len(data[0])  
                 server = FedFW_Server(fl_aggregator,
                                       fl_algorithm,
@@ -203,7 +204,7 @@ def main(dataset, problem_type, model_name, fl_algorithm, optimizer, fl_aggregat
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--dataset", type=str, default="MNIST", choices=["MNIST", "FMNIST", "CIFAR10", "EMNIST", "CIFAR100", "CELEBA", "SYNTHETIC", "MOVIELENS_1m", "MOVIELENS_100k"])
+    parser.add_argument("--dataset", type=str, default="SYNTHETIC", choices=["MNIST", "FMNIST", "CIFAR10", "EMNIST", "CIFAR100", "CELEBA", "SYNTHETIC", "MOVIELENS_1m", "MOVIELENS_100k"])
     parser.add_argument("--problem_type", type=str, default="NN", choices=["QAP", "NN", "Matrix_completion"])
     parser.add_argument("--model_name", type=str, default="MCLR",  choices=["CNN", "MCLR", "DNN"])
     parser.add_argument("--times", type=int, default=1 )
@@ -216,7 +217,11 @@ if __name__ == "__main__":
     parser.add_argument("--local_iters", type=int, default=1)
     parser.add_argument("--batch_size", type=int, default=124)
     parser.add_argument("--device", type=int, default=0, choices=[0,1,2,3,4,5,6,7,8] )
-    parser.add_argument("--fl_aggregator", type=str, default="simple_averaging", choices = ["simple_averaging", "weighted_averaging"])    
+    parser.add_argument("--fl_aggregator", type=str, default="simple_averaging", choices = ["simple_averaging", "weighted_averaging"])
+
+    parser.add_argument("--num_users", type=int, default=10, help="should be multiple of 10") 
+    parser.add_argument("--num_labels", type=int, default=10)  
+    parser.add_argument("--iid", type=int, default=1, choices=[0, 1], help="0 : for iid , 1 : non-iid")
 
     args = parser.parse_args()
 
@@ -253,7 +258,9 @@ if __name__ == "__main__":
         local_iters=args.local_iters,
         batch_size = args.batch_size,
         times=args.times,
-        gpu = args.device)
+        gpu = args.device,
+        num_users=args.num_users,
+        num_labels=args.num_labels)
 
     
         

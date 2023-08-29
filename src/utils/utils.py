@@ -21,53 +21,8 @@ NUM_CHANNELS = 1
 IMAGE_SIZE_CIFAR = 32
 NUM_CHANNELS_CIFAR = 3
 
-""""
-def suffle_data(data):
-    data_x = data['x']
-    data_y = data['y']
-        # randomly shuffle data
-    np.random.seed(100)
-    rng_state = np.random.get_state()
-    np.random.shuffle(data_x)
-    np.random.set_state(rng_state)
-    np.random.shuffle(data_y)
-    return (data_x, data_y)
 
-
-
-
-def get_batch_sample(data, batch_size):
-    ""data_x = data['x']
-    data_y = data['y']
-
-    np.random.seed(100)
-    rng_state = np.random.get_state()
-    np.random.shuffle(data_x)
-    np.random.set_state(rng_state)
-    np.random.shuffle(data_y)
-
-    batched_x = data_x[0:batch_size]
-    batched_y = data_y[0:batch_size]
-    return (batched_x, batched_y)
-
-def get_random_batch_sample(data_x, data_y, batch_size):
-    num_parts = len(data_x)//batch_size + 1
-    if(len(data_x) > batch_size):
-        batch_idx = np.random.choice(list(range(num_parts +1)))
-        sample_index = batch_idx*batch_size
-        if(sample_index + batch_size > len(data_x)):
-            return (data_x[sample_index:], data_y[sample_index:])
-        else:
-            return (data_x[sample_index: sample_index+batch_size], data_y[sample_index: sample_index+batch_size])
-    else:
-        return (data_x,data_y)
-
-
-Check if code goes through this function
-
-"""
-
-def read_cifar10_data():
+def read_cifar10_data(NUM_USERS, NUM_LABELS):
     transform = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
     trainset = torchvision.datasets.CIFAR10(root='./data', train=True,download=True, transform=transform)
@@ -88,8 +43,8 @@ def read_cifar10_data():
 
     random.seed(1)
     np.random.seed(1)
-    NUM_USERS = 10 # should be muitiple of 10
-    NUM_LABELS = 3
+    # NUM_USERS = 10 # should be muitiple of 10
+    # NUM_LABELS = 3
     # Setup directory for train/test data
     train_path = './data/train/cifa_train_100.json'
     test_path = './data/test/cifa_test_100.json'
@@ -219,7 +174,7 @@ def read_cifar10_data():
         
     return train_data['users'], train_data['user_data'], test_data['user_data']
 
-def read_cifar100_data():
+def read_cifar100_data(NUM_USERS, NUM_LABELS):
     transform = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
     trainset = torchvision.datasets.CIFAR100(root='./data', train=True,download=True, transform=transform)
@@ -240,8 +195,8 @@ def read_cifar100_data():
 
     random.seed(1)
     np.random.seed(1)
-    NUM_USERS = 100 # should be muitiple of 10
-    NUM_LABELS = 2
+    # NUM_USERS = 100 # should be muitiple of 10
+    # NUM_LABELS = 2
     # Setup directory for train/test data
     train_path = './data/train/cifar100_train.json'
     test_path = './data/test/cifar100_test.json'
@@ -313,14 +268,14 @@ def read_cifar100_data():
         for j in range(NUM_LABELS): 
             # l = (2*user+j)%10
             l = (user + j) % 100
-            num_samples = int(props[l, user//int(NUM_USERS/100), j])
+            # num_samples = int(props[l, user//int(NUM_USERS/100), j])
             # print("depth :",l)
             # print("row :",user//int(NUM_USERS/100))
             # print("Column :",j)
             # print("num_samples",num_samples)
             # input("press")
-            numran1 = random.randint(300, 2000)
-            num_samples = (num_samples)  + numran1 #+ 200
+            num_samples = random.randint(300, 2000)
+            # num_samples = (num_samples)  + numran1 #+ 200
             # print(" num_samples", num_samples)
 
 
@@ -368,7 +323,7 @@ def read_cifar100_data():
         
     return train_data['users'], train_data['user_data'], test_data['user_data']
 
-def read_FMnist_data():
+def read_FMnist_data(NUM_USERS, NUM_LABELS):
     transform = transforms.Compose([transforms.ToTensor(),transforms.Normalize([0.5], [0.5])])
 
     trainset = torchvision.datasets.FashionMNIST(root='./data', train=True,download=True, transform=transform)
@@ -389,8 +344,8 @@ def read_FMnist_data():
 
     random.seed(1)
     np.random.seed(1)
-    NUM_USERS = 100 # should be muitiple of 10
-    NUM_LABELS = 10
+    # NUM_USERS = 100 # should be muitiple of 10
+    # NUM_LABELS = 10
     # Setup directory for train/test data
     train_path = './data/train/mnist_train.json'
     test_path = './data/test/mnist_test.json'
@@ -494,7 +449,7 @@ def read_FMnist_data():
     return train_data['users'], train_data['user_data'], test_data['user_data']
 
 
-def read_Mnist_data():
+def read_Mnist_data(NUM_USERS, NUM_LABELS):
     transform = transforms.Compose([transforms.ToTensor(),transforms.Normalize([0.5], [0.5])])
 
     trainset = torchvision.datasets.MNIST(root='./data', train=True,download=True, transform=transform)
@@ -515,8 +470,8 @@ def read_Mnist_data():
 
     random.seed(1)
     np.random.seed(1)
-    NUM_USERS = 10 # should be muitiple of 10
-    NUM_LABELS = 10
+    # NUM_USERS = 10 # should be muitiple of 10
+    # NUM_LABELS = 10
     # Setup directory for train/test data
     train_path = './data/train/mnist_train.json'
     test_path = './data/test/mnist_test.json'
@@ -620,7 +575,7 @@ def read_Mnist_data():
     return train_data['users'], train_data['user_data'], test_data['user_data']
 
 
-def read_EMnist_data():
+def read_EMnist_data(NUM_USERS, NUM_LABELS):
     transform = transforms.Compose([transforms.ToTensor(), # convert to tensor
                                     transforms.Normalize((0.1307,), (0.3081,))])  # normalize the data
 
@@ -654,8 +609,8 @@ def read_EMnist_data():
 
     random.seed(1)
     np.random.seed(1)
-    NUM_USERS = 100 # should be muitiple of 10
-    NUM_LABELS = 10
+    # NUM_USERS = 100 # should be muitiple of 10
+    # NUM_LABELS = 10
     # Setup directory for train/test data
     train_path = './data/train/emnist_train.json'
     test_path = './data/test/emnist_test.json'
@@ -762,7 +717,7 @@ def read_EMnist_data():
         
     return train_data['users'], train_data['user_data'], test_data['user_data']
 
-def read_Celeba_data():
+def read_Celeba_data(NUM_USERS, NUM_LABELS):
     # Define transformations to be applied to the input images
     transform = transforms.Compose([ 
         transforms.Resize((64,64)),
@@ -788,8 +743,8 @@ def read_Celeba_data():
 
     random.seed(1)
     np.random.seed(1)
-    NUM_USERS = 1000 # should be muitiple of 10
-    NUM_LABELS = 10
+    # NUM_USERS = 1000 # should be muitiple of 10
+    # NUM_LABELS = 10
     # Setup directory for train/test data
     train_path = './data/train/celeba_train.json'
     test_path = './data/test/celeba_test.json'
@@ -963,7 +918,109 @@ def MovieLensDataset(dataset_name):
         raise ValueError("Invalid dataset name. Available datasets: ml-1m, ml-100k")
         return 0
 
+def softmax(x):
+    ex = np.exp(x)
+    sum_ex = np.sum(np.exp(x))
+    return ex / sum_ex
+
+def generate_synthetic(NUM_USER, NUM_CLASS, iid, alpha, beta):
+    dimension = 60
+    # NUM_CLASS = 10
+    samples_per_user = (np.random.lognormal(4, 2, NUM_USER).astype(int) + 50) * 5
+    # print(samples_per_user)
+    num_samples = np.sum(samples_per_user)
+
+    X_split = [[] for _ in range(NUM_USER)]
+    y_split = [[] for _ in range(NUM_USER)]
+
+    #### define some eprior ####
+    mean_W = np.random.normal(0, alpha, NUM_USER)
+    mean_b = mean_W
+    B = np.random.normal(0, beta, NUM_USER)
+    mean_x = np.zeros((NUM_USER, dimension))
+
+    diagonal = np.zeros(dimension)
+    for j in range(dimension):
+        diagonal[j] = np.power((j + 1), -1.2)
+    cov_x = np.diag(diagonal)
+
+    for i in range(NUM_USER):
+        if iid == 1:
+            mean_x[i] = np.ones(dimension) * B[i]  # all zeros
+        else:
+            mean_x[i] = np.random.normal(B[i], 1, dimension)
+        # print(mean_x[i])
+
+    if iid == 1:
+        W_global = np.random.normal(0, 1, (dimension, NUM_CLASS))
+        b_global = np.random.normal(0, 1, NUM_CLASS)
+
+    for i in range(NUM_USER):
+
+        W = np.random.normal(mean_W[i], 1, (dimension, NUM_CLASS))
+        b = np.random.normal(mean_b[i], 1, NUM_CLASS)
+
+        if iid == 1:
+            W = W_global
+            b = b_global
+
+        xx = np.random.multivariate_normal(mean_x[i], cov_x, samples_per_user[i])
+        yy = np.zeros(samples_per_user[i])
+
+        for j in range(samples_per_user[i]):
+            tmp = np.dot(xx[j], W) + b
+            yy[j] = np.argmax(softmax(tmp))
+
+        X_split[i] = xx.tolist()
+        y_split[i] = yy.tolist()
+
+        # print("{}-th users has {} exampls".format(i, len(y_split[i])))
+
+    return X_split, y_split
+
+
+def read_synthetic_data(NUM_USERS, NUM_LABELS, iid):
+    np.random.seed(0)
+    train_data = {'users': [], 'user_data': {}, 'num_samples': []}
+    test_data = {'users': [], 'user_data': {}, 'num_samples': []}
+
+    train_path = "data/train/mytrain.json"
+    test_path = "data/test/mytest.json"
+    dir_path = os.path.dirname(train_path)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+    dir_path = os.path.dirname(test_path)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+    # NUM_USERS = 50
+    X, y = generate_synthetic(NUM_USERS, NUM_LABELS, iid, alpha=0.5, beta=0.5)  # synthetic (0.5, 0.5)
+
+    # Create data structure
+    train_data = {'users': [], 'user_data': {}, 'num_samples': []}
+    test_data = {'users': [], 'user_data': {}, 'num_samples': []}
+
     
+    grp_idx = 0
+    for i in trange(NUM_USERS, ncols=120):
+        uname = 'f_{0:05d}'.format(i)
+        combined = list(zip(X[i], y[i]))
+        random.shuffle(combined)
+        X[i][:], y[i][:] = zip(*combined)
+        num_samples = len(X[i])
+        train_len = int(0.75 * num_samples)
+        test_len = num_samples - train_len
+
+        train_data['users'].append(uname)
+        train_data['user_data'][uname] = {'x': X[i][:train_len], 'y': y[i][:train_len]}
+        train_data['num_samples'].append(train_len)
+        test_data['users'].append(uname)
+        test_data['user_data'][uname] = {'x': X[i][train_len:], 'y': y[i][train_len:]}
+        test_data['num_samples'].append(test_len)
+
+   
+
+    return train_data['users'], train_data['user_data'], test_data['user_data']
+
     
     
 
@@ -1066,7 +1123,7 @@ def read_MovieLens_data(dataset_name):
     
     return Data_ml100k_Nuclear
 
-def read_data(dataset):
+def read_data(args):
     '''parses data in given train and test data directories
     assumes:
     - the data in the input directories are .json files with 
@@ -1078,35 +1135,39 @@ def read_data(dataset):
         test_data: dictionary of test data
     '''
     
-    if(dataset == "CIFAR10"):
-        clients, train_data, test_data = read_cifar10_data()
+    if(args.dataset == "CIFAR10"):
+        clients, train_data, test_data = read_cifar10_data(args.num_users, args.num_labels)
         return clients, train_data, test_data
     
-    elif(dataset == "CIFAR100"):
-        clients, train_data, test_data = read_cifar100_data()
+    elif(args.dataset == "CIFAR100"):
+        clients, train_data, test_data = read_cifar100_data(args.num_users, args.num_labels)
         return clients, train_data, test_data
 
-    elif(dataset == "MNIST"):
-        clients, train_data, test_data = read_Mnist_data()
+    elif(args.dataset == "MNIST"):
+        clients, train_data, test_data = read_Mnist_data(args.num_users, args.num_labels)
         return clients, train_data, test_data
     
-    elif(dataset == "FMNIST"):
-        clients, train_data, test_data = read_FMnist_data()
+    elif(args.dataset == "FMNIST"):
+        clients, train_data, test_data = read_FMnist_data(args.num_users, args.num_labels)
         return clients, train_data, test_data
 
-    elif(dataset == "EMNIST"):
-        clients, train_data, test_data = read_EMnist_data()
+    elif(args.dataset == "EMNIST"):
+        clients, train_data, test_data = read_EMnist_data(args.num_users, args.num_labels)
         return clients, train_data, test_data
 
-    elif(dataset == 'CELEBA'):
-        clients, train_data, test_data = read_Celeba_data()
+    elif(args.dataset == 'CELEBA'):
+        clients, train_data, test_data = read_Celeba_data(args.num_users, args.num_labels)
+        return clients, train_data, test_data
+    
+    elif(args.dataset == 'SYNTHETIC'):
+        clients, train_data, test_data = read_synthetic_data(args.num_users, args.num_labels, args.iid)
         return clients, train_data, test_data
 
 
-    elif(dataset == "MOVIELENS_1m"):
+    elif(args.dataset == "MOVIELENS_1m"):
         data = read_MovieLens_data("ml-1m")
         return data
-    elif(dataset == "MOVIELENS_100k"):
+    elif(args.dataset == "MOVIELENS_100k"):
         print("at utils")
         data = read_MovieLens_data("ml-100k")
         return data
@@ -1162,7 +1223,7 @@ def read_user_data(index,data,dataset):
         X_test = torch.Tensor(X_test).view(-1, NUM_CHANNELS, IMAGE_SIZE, IMAGE_SIZE).type(torch.float32)
         y_test = torch.Tensor(y_test).type(torch.int64)
 
-    elif(dataset == "SYNTHETIC"):
+    elif(dataset == "CELEBA"):
         X_train, y_train, X_test, y_test = train_data['x'], train_data['y'], test_data['x'], test_data['y']
         X_train = torch.Tensor(X_train).view(-1, NUM_CHANNELS, IMAGE_SIZE, IMAGE_SIZE).type(torch.float32)
         y_train = torch.Tensor(y_train).type(torch.int64)
@@ -1170,7 +1231,10 @@ def read_user_data(index,data,dataset):
         y_test = torch.Tensor(y_test).type(torch.int64)
     
     else:
-        print("no dataset found")
+        X_train = torch.Tensor(X_train).type(torch.float32)
+        y_train = torch.Tensor(y_train).type(torch.int64)
+        X_test = torch.Tensor(X_test).type(torch.float32)
+        y_test = torch.Tensor(y_test).type(torch.int64)
     
 
     train_data = [(x, y) for x, y in zip(X_train, y_train)]

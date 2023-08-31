@@ -163,7 +163,7 @@ class FedFW_Server():
         ax[1].plot(self.avg_train_loss_list, label= "Train_loss")
         ax[1].plot(self.avg_test_loss_list, label= "Test_loss")
         ax[1].set_xlabel("Global Iteration")
-        ax[1].set_ylabel("accuracy")
+        ax[1].set_ylabel("Loss")
         ax[1].set_xticks(range(0, self.global_iters, int(self.global_iters/5)))
         ax[1].legend(prop={"size":12})
         

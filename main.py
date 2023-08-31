@@ -97,19 +97,19 @@ def main(dataset, problem_type, model_name, fl_algorithm, optimizer, fl_aggregat
                     model = DNN(561,100,12).to(device)
                     loss = nn.NLLLoss()
                 elif(dataset == "gleam"):
-                    model = DNN(561,20,6).to(device), model
+                    model = DNN(561,20,6).to(device)
                     loss = nn.NLLLoss()
                 elif(dataset == "vehicle_sensor"):
-                    model = DNN(100,20,2).to(device), model
+                    model = DNN(100,20,2).to(device)
                     loss = nn.NLLLoss()
                 elif(dataset == "SYNTHETIC"):
-                    model = DNN(60,20,10).to(device), model
+                    model = DNN(60,20,10).to(device)
                     loss = nn.NLLLoss()
                 elif(dataset == "EMNIST"):
-                    model = DNN(784,200,62).to(device), model
+                    model = DNN(784,200,62).to(device)
                     loss = nn.NLLLoss()
                 else:#(dataset == "Mnist"):
-                    model = DNN2().to(device), model
+                    model = DNN2().to(device)
                     loss = nn.NLLLoss()
         
 
@@ -121,21 +121,21 @@ def main(dataset, problem_type, model_name, fl_algorithm, optimizer, fl_aggregat
         
 
         if problem_category == 3:
-            if fl_algorithm == "FedAvg":
-                users = []   # the list of the object of the users
-                data = read_data(dataset) 
-                # print(data)
-
-                # print("len_data",len(data[1]))
-                # input("press")
-                """
-                data[0] : client id
-                data[1] : train data
-                data[2] : test data
+            users = []
+            print(dataset)
+            data = read_data(args)
+            total_users = len(data[0])  
+            if fl_algorithm == "FedFW":
+                server = FedFW_Server(fl_aggregator, fl_algorithm, model, model_name, dataset, global_iters, lambda_0, kappa, exp_no )
+                for i in range(0,total_users):
+                    train, test = read_user_data(i,data,dataset)
+                    data_ratio = len(data[1])/len(train)
+                    user = FedFW_Client(model, optimizer, loss, total_users, train, test, local_iters, lambda_0, kappa, batch_size, data_ratio, 
+                                        device)   # Creating the instance of the users. 
+                    
+                    users.append(user)
                 
-                """
-                # read_dataset will return 
-                total_users = len(data[0])  
+            elif fl_algorithm == "FedAvg":
                 server = Fed_Avg_Server(fl_aggregator, model)
                 for i in range(0,total_users):
                     train, test = read_user_data(i,data,dataset)
@@ -145,42 +145,8 @@ def main(dataset, problem_type, model_name, fl_algorithm, optimizer, fl_aggregat
                     # print("data_ratio",data_ratio) ## The ratio is not fixed yet
                     user = Fed_Avg_Client(model, optimizer, loss, train, test, local_iters, step_size, batch_size, data_ratio, device)   # Creating the instance of the users. 
                     users.append(user)
-                # print(users)
 
-
-            if fl_algorithm == "FedFW":
-                users = []
-                print(dataset)
-                data = read_data(args)
-                total_users = len(data[0])  
-                server = FedFW_Server(fl_aggregator,
-                                      fl_algorithm,
-                                      model,
-                                      model_name,
-                                      dataset,
-                                      global_iters,
-                                      lambda_0,
-                                      kappa,
-                                      exp_no
-                                      )
-                for i in range(0,total_users):
-                    train, test = read_user_data(i,data,dataset)
-                    data_ratio = len(data[1])/len(train)
-                    user = FedFW_Client(model, 
-                                        optimizer,
-                                        loss,
-                                        total_users,
-                                        train, 
-                                        test, 
-                                        local_iters, 
-                                        lambda_0,
-                                        kappa,
-                                        batch_size, 
-                                        data_ratio, 
-                                        device)   # Creating the instance of the users. 
-                   
-                    users.append(user)
-            
+                
             server.train(users)
             server.save_file()
             server.plot_result()
@@ -204,18 +170,18 @@ def main(dataset, problem_type, model_name, fl_algorithm, optimizer, fl_aggregat
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--dataset", type=str, default="SYNTHETIC", choices=["MNIST", "FMNIST", "CIFAR10", "EMNIST", "CIFAR100", "CELEBA", "SYNTHETIC", "MOVIELENS_1m", "MOVIELENS_100k"])
+    parser.add_argument("--dataset", type=str, default="EMNIST", choices=["MNIST", "FMNIST", "CIFAR10", "EMNIST", "CIFAR100", "CELEBA", "SYNTHETIC", "MOVIELENS_1m", "MOVIELENS_100k"])
     parser.add_argument("--problem_type", type=str, default="NN", choices=["QAP", "NN", "Matrix_completion"])
-    parser.add_argument("--model_name", type=str, default="MCLR",  choices=["CNN", "MCLR", "DNN"])
+    parser.add_argument("--model_name", type=str, default="DNN",  choices=["CNN", "MCLR", "DNN"])
     parser.add_argument("--times", type=int, default=1 )
     parser.add_argument("--fl_algorithm", type=str, default= "FedFW")
     parser.add_argument("--optimizer", type=str, default="FW", choices=["FW","GD", "SGD", "PGD", "PSGD"])
     parser.add_argument("--step_size", type=float, default=0.05)
-    parser.add_argument("--lambda_0", type=float, default=0.0000001)
-    parser.add_argument("--kappa", type=float,  default=5.0)
-    parser.add_argument("--glob_iters", type=int, default=100)
+    parser.add_argument("--lambda_0", type=float, default=0.0001)
+    parser.add_argument("--kappa", type=float,  default=10.0)
+    parser.add_argument("--glob_iters", type=int, default=1000)
     parser.add_argument("--local_iters", type=int, default=1)
-    parser.add_argument("--batch_size", type=int, default=124)
+    parser.add_argument("--batch_size", type=int, default=2000)
     parser.add_argument("--device", type=int, default=0, choices=[0,1,2,3,4,5,6,7,8] )
     parser.add_argument("--fl_aggregator", type=str, default="simple_averaging", choices = ["simple_averaging", "weighted_averaging"])
 

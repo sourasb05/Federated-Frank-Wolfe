@@ -2,7 +2,7 @@ import os
 import h5py
 import numpy as np
 attributes = []
-hf = h5py.File('/proj/sourasb-220503/codebase/FedFWplus/results/FedFW/MNIST/MCLR/0_dataset_MNIST_aggregator_simple_averaging_fl_algorithm_FedFW_model_MCLR_lamdba_01e-05_kappa_1.0_global_iters_1028_08_2023.h5','r')
+hf = h5py.File('/proj/sourasb-220503/codebase/FedFWplus/results/FedFW/EMNIST/DNN/0_dataset_EMNIST_aggregator_simple_averaging_fl_algorithm_FedFW_model_DNN_lamdba_00.0001_kappa_10.0_global_iters_1000_31_08_2023.h5','r')
 id = 0
 
 for key in hf.keys():
@@ -12,8 +12,8 @@ for key in hf.keys():
 print(attributes)
 tsl = hf.get('global_test_loss')
 trl = hf.get('global_test_accuracy')
-tra = hf.get('global_train_loss')
-tsa = hf.get('global_train_accuracy')
+tsa = hf.get('global_train_loss')
+tra = hf.get('global_train_accuracy')
 
 print("train accuracy",np.array(tra))
 print("test accuracy",np.array(tsa))

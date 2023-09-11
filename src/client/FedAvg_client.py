@@ -4,12 +4,23 @@ import torch
 import torch.nn as nn
 import random
 from torch.utils.data import DataLoader
+from src.Optimizer import MySGD
 
 class Fed_Avg_Client():
 
-    def __init__(self, model, optimizer_name, loss, train_set, test_set, local_iters, learning_rate, batch_size, data_ratio, device):
+    def __init__(self, 
+                 model, 
+                 optimizer_name, 
+                 loss, 
+                 train_set, 
+                 test_set, 
+                 local_iters, 
+                 learning_rate, 
+                 batch_size, 
+                 data_ratio, 
+                 device):
         
-        self.local_model = copy.deepcopy(model[0])
+        self.local_model = copy.deepcopy(model)
         self.train_samples = len(train_set)
         self.test_samples = len(test_set)
         self.local_iters = local_iters
@@ -24,14 +35,14 @@ class Fed_Avg_Client():
             self.trainloader = DataLoader(train_set, self.train_samples)
             self.testloader =  DataLoader(test_set, self.test_samples)
             self.tot_epoch = 1
-            self.optimizer = torch.optim.SGD(self.local_model.parameters(), lr=self.learning_rate)
+            self.optimizer = MySGD(self.local_model.parameters(), lr=self.learning_rate)
 
 
         elif optimizer_name == "SGD" or optimizer_name == "PSGD":
             self.trainloader = DataLoader(train_set, self.batch_size)
             self.testloader =  DataLoader(test_set, self.batch_size)
             self.tot_epoch = math.ceil(torch.div(self.train_samples, self.batch_size))
-            self.optimizer = torch.optim.SGD(self.local_model.parameters(), lr=self.learning_rate)
+            self.optimizer = MySGD(self.local_model.parameters(), lr=self.learning_rate)
         
        
         else:
@@ -71,7 +82,7 @@ class Fed_Avg_Client():
         
     def set_parameters(self, glob_model):
         for l_param, g_param in zip(self.local_model.parameters(), glob_model.parameters()):
-            l_param.data = g_param.data
+            l_param.data = g_param.data.clone()
 
     def l2_projection(self, x, radius):
         """

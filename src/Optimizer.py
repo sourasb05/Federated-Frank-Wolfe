@@ -1,6 +1,5 @@
 import torch
-from torch.optim import Optimizer, sgd
-from src.client import FedFW_client
+from torch.optim import Optimizer
 from src.utils.oracles import LMO_l1 , LMO_l2
 from typing import Callable
 import copy
@@ -23,6 +22,9 @@ class FedFW(Optimizer):
                     params, 
                     server_model, 
                     lambda_0: float, 
+                    eta_t: float,
+                    eta_type: str,
+                    lambda_type: str,
                     num_client_iter: int,
                     step_direction_func: Callable[[torch.Tensor, float], torch.Tensor], 
                     alpha: float):
@@ -36,12 +38,15 @@ class FedFW(Optimizer):
 
         defaults = dict(
             lambda_0=lambda_0,
+            eta_t=eta_t,
             num_client_iter=num_client_iter,
             step_direction_func=step_direction_func,
             alpha=alpha
             )
         
         self.server_model = copy.deepcopy(server_model)
+        self.eta_type = eta_type
+        self.lambda_type = lambda_type
         super(FedFW, self).__init__(params, defaults)
 
 
@@ -68,16 +73,22 @@ class FedFW(Optimizer):
                 lambda_0 = group['lambda_0']
                 step_direction_func = group['step_direction_func']
                 alpha = group['alpha']
-                # print(alpha)
-                # input("press")
+                
                 num_client_iter = group['num_client_iter']
 
                 # Compute eta_t and lambda_t
                 # print(step)
-                eta_t = 2 / (step + 1)
-                # print("eta_t :", eta_t)
-                lambda_t = lambda_0 * math.sqrt(step + 1)
-                # print("lambda_t :", lambda_t)
+                # eta_t = 2 / (step + 1)
+                if self.eta_type == "constant":
+                    eta_t = group['eta_t'] ## 
+                else:
+                    eta_t = 2 / (step + 1)
+
+                if self.lambda_type == "constant":
+                    lambda_t = group['lambda_0']
+                else:
+                    lambda_t = lambda_0 * math.sqrt(step + 1)
+
                 # Compute g_i^t
                 # grad.mul_(1 / num_client_iter).add_(p.data - server_p.data, alpha=lambda_t)
                 grad = (1/ 10)*p.grad.data + lambda_t*(p.data - server_p.data)
@@ -97,104 +108,22 @@ class FedFW(Optimizer):
 
 
 
+class MySGD(Optimizer):
+    def __init__(self, params, lr):
+        defaults = dict(lr=lr)
+        super(MySGD, self).__init__(params, defaults)
 
-
-
-
-
-
-
-
-
-
-
-
-class FW(Optimizer):
-
-
-
-    def __init__(self, params, eta_t, kappa, device):
-        
-        if eta_t <0:
-            raise ValueError("Invalid Learning rate: {}".format(eta_t))
-        defaults = dict(eta_t=eta_t)
-        super(FW, self).__init__(params, defaults)
-        self.eta_t=eta_t
-        self.kappa=kappa
-        self.device=device
-    def FW_LMO(self, g_it):
-        all_param = [] 
-        param_size = []
-        for j, param in enumerate(g_it.parameters()):
-          
-            all_param.append(param.data.view(-1))
-            param_size.append(len(param.data.view(-1)))
-          
-        param_concat = torch.cat(all_param, dim=0)
-        lmo_s_it = LMO_l1(param_concat.cpu().numpy(), self.kappa)
-        lmo_s_it = torch.from_numpy(lmo_s_it)
-
-        param_proj = torch.split(lmo_s_it, param_size, dim=0)
-        param_size_now = []
-        for proj , param in zip(param_proj, g_it.parameters()):
-            parameter_size = param.shape
-            param.data = proj.view(*parameter_size)
-        g_it.to(self.device)
-        return g_it.parameters()
-    
-    def step(self, g_it, x_it, x_bar_t, n, lambda_t, closure=None):
-        """Performs a single optimization step.
-
-        Arguments:
-            closure (callable, optional): A closure that reevaluates the model
-                and returns the loss.
-        """
+    def step(self, closure=None, beta = 0):
         loss = None
         if closure is not None:
-            loss = closure()
-
-        # for group in self.param_groups:
-        #    for g_it_param, x_it_param, x_bar_t_param in zip(g_it.parameters(), group['params'], x_bar_t.parameters()):
-                #print("g_it_param.data :", g_it_param.data)
-                #input("press") 
-                #print("x_it_param.grad.data :", x_it_param.grad.data)
-                #input("press") 
-        #        print("x_bar_t_param.data :", x_bar_t_param.data)
-        #        input("press") 
-        #        g_it_param.data = x_it_param.grad.data*(1/n) + lambda_t*(x_it_param.data -x_bar_t_param.data)
-        #        print("g_it_param.data :", g_it_param.data)    
-        #        input("press")    
-        
-        for g_it_param, x_it_param, x_bar_t_param in zip(g_it.parameters(), x_it.parameters(), x_bar_t.parameters()):
-            g_it_param.data = x_it_param.grad.data*(1/n) + lambda_t*(x_it_param.data -x_bar_t_param.data)
-        s_it = self.LMO_l1(g_it)
-        # print("s_it :", list(s_it))
-        # input("press")
-        
-        for x_it_param, s_it_param in zip(x_it.parameters(), s_it):
-            x_it_param.data = (1-self.eta_t)*x_it_param.data + self.eta_t*s_it_param.data
-        # print(group['params'])
-        # input("press")
-        
-        
-        # for x_it_param in x_it.parameters():
-        #        x_it_param.data = (1-self.eta_t)*x_it_param.data + self.eta_t*x_it_param.grad.data
-        
-        
-        return x_it.parameters()
-                
+            loss = closure
 
         for group in self.param_groups:
-            kappa = group['kappa']
-
+            # print(group)
             for p in group['params']:
                 if p.grad is None:
                     continue
-                s = LMO_l1(p.grad.data.numpy(), kappa)
-                gamma = 2 / (self.k + 2)
-                # x^(k+1) = x^(k) - g x^(k) + g s
-                delta_p = torch.Tensor(gamma * s - gamma * p.data.numpy())
-                p.data.add_(delta_p)
+                d_p = p.grad.data
+                p.data = p.data - (group['lr'] * d_p)
         
-        self.k += 1
         return loss

@@ -17,7 +17,10 @@ class FedFW_Client():
                 train_set, 
                 test_set, 
                 local_iters, 
+                eta_t,
                 lambda_0,  # regularizer
+                eta_type,
+                lambda_type,
                 kappa, # Constraint 
                 batch_size, 
                 data_ratio, 
@@ -56,9 +59,12 @@ class FedFW_Client():
         self.optimizer = FedFW(self.x_it.parameters(),
                                 server_model=self.x_bar_t,
                                 lambda_0=self.lambda_0,
+                                eta_t=self.eta_t,
+                                eta_type=eta_type,
+                                lambda_type=lambda_type,
                                 num_client_iter=local_iters,
                                 step_direction_func=LMO_l2,
-                                alpha=100)
+                                alpha=kappa)
      
     def selection(self):
         outcomes = [0,1]

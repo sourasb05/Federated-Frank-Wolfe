@@ -16,7 +16,10 @@ class FedFW_Server():
                  model_name,
                  dataset,
                  global_iters,
+                 eta_0,
                  lambda_0,
+                 eta_type,
+                 lambda_type,
                  kappa,
                  exp_no
                  ):
@@ -26,7 +29,10 @@ class FedFW_Server():
         self.global_iters = global_iters
         self.model_name = model_name
         self.dataset = dataset
+        self.eta_t = eta_0
         self.lambda_0 = lambda_0
+        self.eta_type = eta_type
+        self.lambda_type = lambda_type
         self.kappa = kappa
         self.exp_no = exp_no
         self.avg_train_loss_list = []
@@ -37,7 +43,6 @@ class FedFW_Server():
         
         
     def global_update(self,selected_users, t): 
-        eta_t =  2 /(t+1)
         for param in self.x_bar_t.parameters():
             param.data.zero_()
         for user in selected_users:
@@ -57,14 +62,14 @@ class FedFW_Server():
         
         for t in trange(self.global_iters):
             self.send_parameters(users)   # server send parameters to every users
-            self.evaluate(users)  # evaluate global model
+            
             selected_users = select_users(users)
             print("number of selected users",len(selected_users))
             for user in selected_users:
                 user.local_train()
             
             self.global_update(selected_users, t)
-
+            self.evaluate(users)  # evaluate global model
                 
     def evaluate(self, users):
         tot_train_loss = 0
@@ -137,10 +142,12 @@ class FedFW_Server():
         with h5py.File("./results/"+ directory_name + "/" + '{}.h5'.format(alg), 'w') as hf:
             hf.create_dataset('exp_no', data=self.exp_no)
             hf.create_dataset('kappa', data=self.kappa) 
-            hf.create_dataset('lambda', data=self.lambda_0)
+            hf.create_dataset('lambda_0', data=self.lambda_0)
+            hf.create_dataset('eta_0', data=self.eta_t) 
+            hf.create_dataset('eta_type', data=self.eta_type)
+            hf.create_dataset('lambda_type', data=self.lambda_type)
             hf.create_dataset('global_rounds', data=self.global_iters)
             
-
             hf.create_dataset('global_train_accuracy', data=self.avg_train_accuracy_list)
             hf.create_dataset('global_train_loss', data=self.avg_train_loss_list)
             hf.create_dataset('global_test_accuracy', data=self.avg_test_accuracy_list)

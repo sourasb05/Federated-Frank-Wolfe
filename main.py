@@ -195,7 +195,7 @@ def main(dataset, problem_type, model_name, fl_algorithm, optimizer, fl_aggregat
 
                 
             server.train(users)
-            server.save_file()
+            #server.save_file()
             server.plot_result()
                 
             """for i in range(0,glob_iters):
@@ -222,14 +222,14 @@ if __name__ == "__main__":
     parser.add_argument("--model_name", type=str, default="MCLR",  choices=["CNN", "MCLR", "DNN"])
     parser.add_argument("--times", type=int, default=1 )
     parser.add_argument("--fl_algorithm", type=str, default= "FedAvg")
-    parser.add_argument("--optimizer", type=str, default="PSGD", choices=["FW","GD", "SGD", "PGD", "PSGD"])
+    parser.add_argument("--optimizer", type=str, default="GD", choices=["FW","GD", "SGD", "PGD", "PSGD"])
     parser.add_argument("--eta_type", type=str, default="constant_eta", choices=["constant_eta", "time_varing_eta"] )
     parser.add_argument("--lambda_type", type=str, default="constant_lambda", choices=["constant_lambda", "time_varing_lambda"])
 
     parser.add_argument("--eta_0", type=float, default=0.05, help="step size")
-    parser.add_argument("--lambda_0", type=float, default=0.0001)
+    parser.add_argument("--lambda_0", type=float, default=0.01)
     parser.add_argument("--kappa", type=float,  default=10.0)
-    parser.add_argument("--glob_iters", type=int, default=100)
+    parser.add_argument("--glob_iters", type=int, default=10)
     parser.add_argument("--local_iters", type=int, default=1)
     parser.add_argument("--batch_size", type=int, default=124)
     parser.add_argument("--device", type=int, default=0, choices=[0,1,2,3,4,5,6,7,8] )

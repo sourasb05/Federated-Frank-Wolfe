@@ -81,8 +81,16 @@ class Fed_Avg_Client():
         return (X.to(self.device), y.to(self.device))
         
     def set_parameters(self, glob_model):
-        for l_param, g_param in zip(self.local_model.parameters(), glob_model.parameters()):
-            l_param.data = g_param.data.clone()
+        glob_model_param=glob_model.parameters()
+        # Store the initial local model parameters
+        if isinstance(glob_model_param, nn.Parameter):
+            print("It is nn.Param")
+            for l_param, g_param in zip(self.local_model.parameters(), glob_model_param):
+                l_param.data = g_param.data.clone()
+        elif isinstance(glob_model_param, list):
+            print("It is a list")
+            for idx, l_param in enumerate(self.local_model.parameters()):
+                l_param.data = glob_model_param[idx].clone()
 
     def l2_projection(self, x, radius):
         """

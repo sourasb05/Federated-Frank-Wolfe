@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from src.client.FedAvg_client import *
 from src.utils.utils import *
 import numpy as np
-
+import torch.nn.init as init
 
 # implementation of FedAvg server
 
@@ -22,6 +22,11 @@ class Fed_Avg_Server():
         self.global_model = copy.deepcopy(model)
         self.aggregator_name = aggregator_name
         self.global_iters = global_iters
+
+        self.avg_train_loss_list = []
+        self.avg_test_loss_list = []
+        self.avg_train_accuracy_list = []
+        self.avg_test_accuracy_list = []
         
     def global_update(self, users, selected_users): 
         
@@ -44,7 +49,7 @@ class Fed_Avg_Server():
                     # print("g_param:",g_param.data)
                     # print("l_param:",l_param.data)
                     # input("press")
-                    g_param.data = g_param.data + (1/N) * l_param.data 
+                    g_param.data = g_param.data + (1/N) * l_param.data.clone()
                 elif self.aggregator_name == "weighted_averaging":
                     g_param.data = g_param.data + user.data_ratio * l_param.data
                 else:
@@ -56,7 +61,12 @@ class Fed_Avg_Server():
         else:
             for user in users:
                 user.set_parameters(self.global_model)
-    
+
+    def initialize_parameters_to_zero(self):
+        for param in self.global_model.parameters():
+            if param.requires_grad:
+                init.zeros_(param)
+
     def train(self, users):
         
         for t in trange(self.global_iters):
@@ -68,6 +78,7 @@ class Fed_Avg_Server():
             self.evaluate(users)  # evaluate global model
             # print(selected_users)
             # input("press")
+            self.initialize_parameters_to_zero()  # Because we are averaging parameters
             self.global_update(users, selected_users)
 
                 
@@ -110,6 +121,12 @@ class Fed_Avg_Server():
         avg_train_accuracy = tot_train_corrects/tot_samples_train
         avg_test_accuracy = tot_test_corrects/tot_samples_test
 
+        self.avg_train_loss_list.append(avg_train_loss.item())
+        self.avg_test_loss_list.append(avg_test_loss.item())
+        self.avg_train_accuracy_list.append(avg_train_accuracy)
+        self.avg_test_accuracy_list.append(avg_test_accuracy)
+
+
         print("Average train loss :", avg_train_loss.item())
         print("Average test loss :", avg_test_loss.item())
         print("Average train accuracy :", avg_train_accuracy)
@@ -151,7 +168,7 @@ class Fed_Avg_Server():
 
     def plot_result(self):
         
-        print(self.avg_train_accuracy_list)
+        #print(self.avg_train_accuracy_list)
 
         fig, ax = plt.subplots(1,2, figsize=(12,6))
 
@@ -167,7 +184,8 @@ class Fed_Avg_Server():
         ax[1].set_ylabel("Loss")
         ax[1].set_xticks(range(0, self.global_iters, int(self.global_iters/5)))
         ax[1].legend(prop={"size":12})
-        
+
+        '''
         directory_name = self.fl_algorithm + "/" + self.dataset + "/" + str(self.model_name) + "/" + "plot"
         # Check if the directory already exists
         if not os.path.exists("./results/"+directory_name):
@@ -178,6 +196,6 @@ class Fed_Avg_Server():
        
         plt.savefig("./results/"+ directory_name  + "/" + "_lamdba_0" + str(self.lambda_0) + \
             "_kappa_" + str(self.kappa) + "_global_iters_" + str(self.global_iters) + '.png')
-
+        '''
         # Show the graph
         plt.show()

@@ -7,6 +7,7 @@ from tqdm import trange
 from datetime import date
 import matplotlib.pyplot as plt
 from src.utils.utils import select_users
+import torch.nn.init as init
 
 class FedFW_Server():
     def __init__(self, 
@@ -57,7 +58,12 @@ class FedFW_Server():
             for user in users:
                 user.set_parameters(self.x_bar_t)
 
-    
+
+    def initialize_parameters_to_zero(self):
+        for param in self.global_model.parameters():
+            if param.requires_grad:
+                init.zeros_(param)
+
     def train(self, users):
         
         for t in trange(self.global_iters):
@@ -67,7 +73,8 @@ class FedFW_Server():
             print("number of selected users",len(selected_users))
             for user in selected_users:
                 user.local_train()
-            
+
+            self.initialize_parameters_to_zero()  # Because we are averaging parameters
             self.global_update(selected_users, t)
             self.evaluate(users)  # evaluate global model
                 

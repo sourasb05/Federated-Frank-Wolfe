@@ -1244,9 +1244,15 @@ def read_user_data(index,data,dataset):
 
 
 
-def select_users(users):
+def select_users(users, num_user_perGR):
     selected_users = []
-    for user in users:
+    random.seed()
+    selected_users = random.sample(users, num_user_perGR)
+    
+    return selected_users
+
+    
+    """for user in users:
         #print("user :",user)
         #input("press")
         participation = user.selection()
@@ -1254,4 +1260,6 @@ def select_users(users):
             selected_users.append(user)
         else:
             continue
-    return selected_users
+    """
+    
+    

@@ -16,19 +16,40 @@ import torch.nn.init as init
 
 
 class Fed_Avg_Server():
-    def __init__(self, aggregator_name, 
-                 model,
-                 global_iters):
+    def __init__(self, args, model, loss, device):
         self.global_model = copy.deepcopy(model)
-        self.aggregator_name = aggregator_name
-        self.global_iters = global_iters
+        self.loss = loss
+        self.exp_no = args.exp_no
+        # self.current_directory = current_directory
 
+
+        self.aggregator_name = args.fl_aggregator
+        self.global_iters = args.global_iters
+        self.dataset_name = args.dataset
+        self.fl_algorithm = args.fl_algorithm
+        self.model_name = args.model_name
+        self.lr = args.lr
+        self.batch_size = args.batch_size
+        self.num_users_perGR = args.num_users_perGR
+        self.optimizer_name = args.optimizer
+        self.num_labels=args.num_labels
         self.avg_train_loss_list = []
         self.avg_test_loss_list = []
         self.avg_train_accuracy_list = []
         self.avg_test_accuracy_list = []
+        self.users = []
+        data = read_data(args)
+        total_users = len(data[0])
+                
+        for i in range(0,total_users):
+            train, test = read_user_data(i,data,args.dataset)
+            data_ratio = len(data[1])/len(train)
+            # print("data_ratio",data_ratio) ## The ratio is not fixed yet
+            user = Fed_Avg_Client(args,model,loss,train,test,data_ratio,device)   # Creating the instance of the users. 
         
-    def global_update(self, users, selected_users): 
+            self.users.append(user)
+        
+    def global_update(self, selected_users): 
         
         
         N = len(selected_users)
@@ -67,20 +88,21 @@ class Fed_Avg_Server():
             if param.requires_grad:
                 init.zeros_(param)
 
-    def train(self, users):
+    def train(self):
         
         for t in trange(self.global_iters):
-            self.send_parameters(users)   # server send parameters to every users
-            selected_users = select_users(users)
+            print(len(self.users))
+            print(self.num_users_perGR)
+            selected_users = select_users(self.users, self.num_users_perGR)
+            self.send_parameters(selected_users)   # server send parameters to every users
+            
             print("number of selected users",len(selected_users))
             for user in selected_users:
                 user.local_train()
-            self.evaluate(users)  # evaluate global model
-            # print(selected_users)
-            # input("press")
+            
             self.initialize_parameters_to_zero()  # Because we are averaging parameters
-            self.global_update(users, selected_users)
-
+            self.global_update(selected_users)
+            self.evaluate(selected_users)  # evaluate global model
                 
                 
     def evaluate(self, users):
@@ -103,8 +125,8 @@ class Fed_Avg_Server():
         """
 
         for user in users:
-            train_stats = user.global_eval_train_data()
-            test_stats = user.global_eval_test_data()
+            train_stats = user.global_eval_train_data(self.global_model)
+            test_stats = user.global_eval_test_data(self.global_model)
 
             tot_train_corrects += train_stats[0]
             tot_samples_train += train_stats[1]
@@ -138,13 +160,13 @@ class Fed_Avg_Server():
         d1 = today.strftime("%d_%m_%Y")
        
         print("exp_no ", self.exp_no)
-        alg = str(self.exp_no) + "_dataset_" + str(self.dataset) + "_aggregator_" + str(self.aggregator_name) + "_fl_algorithm_" + str(self.fl_algorithm) + \
+        alg = str(self.exp_no) + "_dataset_" + str(self.dataset_name) + "_aggregator_" + str(self.aggregator_name) + "_fl_algorithm_" + str(self.fl_algorithm) + \
             "_model_" + str(self.model_name) + "_" + d1
         
    
         print(alg)
        
-        directory_name = self.fl_algorithm + "/" + self.dataset + "/" + str(self.model_name)
+        directory_name = self.fl_algorithm + "/" + self.dataset_name + "/" + str(self.model_name) + "/" + str(self.optimizer_name) + "/perf/" +  str(self.num_labels)
         # Check if the directory already exists
         if not os.path.exists("./results/"+directory_name):
         # If the directory does not exist, create it
@@ -152,13 +174,10 @@ class Fed_Avg_Server():
 
         with h5py.File("./results/"+ directory_name + "/" + '{}.h5'.format(alg), 'w') as hf:
             hf.create_dataset('exp_no', data=self.exp_no)
-            hf.create_dataset('kappa', data=self.kappa) 
-            hf.create_dataset('lambda_0', data=self.lambda_0)
-            hf.create_dataset('eta_0', data=self.eta_t) 
-            hf.create_dataset('eta_type', data=self.eta_type)
-            hf.create_dataset('lambda_type', data=self.lambda_type)
-            hf.create_dataset('global_rounds', data=self.global_iters)
+            hf.create_dataset('lr', data=self.lr) 
+            hf.create_dataset('batch_size', data=self.batch_size) 
             
+            hf.create_dataset('global_rounds', data=self.global_iters)
             hf.create_dataset('global_train_accuracy', data=self.avg_train_accuracy_list)
             hf.create_dataset('global_train_loss', data=self.avg_train_loss_list)
             hf.create_dataset('global_test_accuracy', data=self.avg_test_accuracy_list)
@@ -181,12 +200,13 @@ class Fed_Avg_Server():
         ax[1].plot(self.avg_train_loss_list, label= "Train_loss")
         ax[1].plot(self.avg_test_loss_list, label= "Test_loss")
         ax[1].set_xlabel("Global Iteration")
+        ax[1].set_xscale('log')
         ax[1].set_ylabel("Loss")
-        ax[1].set_xticks(range(0, self.global_iters, int(self.global_iters/5)))
+        ax[1].set_yscale('log')
+        #ax[1].set_xticks(range(0, self.global_iters, int(self.global_iters/5)))
         ax[1].legend(prop={"size":12})
 
-        '''
-        directory_name = self.fl_algorithm + "/" + self.dataset + "/" + str(self.model_name) + "/" + "plot"
+        directory_name = self.fl_algorithm + "/" + self.dataset_name + "/" + str(self.model_name) + "/" + str(self.optimizer_name) + "/" + "plot"
         # Check if the directory already exists
         if not os.path.exists("./results/"+directory_name):
         # If the directory does not exist, create it
@@ -194,8 +214,7 @@ class Fed_Avg_Server():
 
         plt.draw()
        
-        plt.savefig("./results/"+ directory_name  + "/" + "_lamdba_0" + str(self.lambda_0) + \
-            "_kappa_" + str(self.kappa) + "_global_iters_" + str(self.global_iters) + '.png')
-        '''
+        plt.savefig("./results/"+ directory_name  + "/" + "exp_no" + str(self.exp_no) + "_lr_" + str(self.lr) + "_global_iters_" + str(self.global_iters) + '.png')
+
         # Show the graph
         plt.show()

@@ -2,7 +2,7 @@ import os
 import h5py
 import numpy as np
 attributes = []
-hf = h5py.File('/proj/sourasb-220503/codebase/FedFWplus/results/FedFW/EMNIST/DNN/0_dataset_EMNIST_aggregator_simple_averaging_fl_algorithm_FedFW_model_DNN_lamdba_00.0001_kappa_10.0_global_iters_1000_31_08_2023.h5','r')
+hf = h5py.File('results/FedFW/MNIST/CNN/constant_eta/constant_lambda/perf/3/0_dataset_MNIST_aggregator_simple_averaging_fl_algorithm_FedFW_model_CNN_lamdba_0_0.09999999999999998_eta_0_0.00010000000000000003_kappa_10.0_global_iters_1000_08_02_2024.h5','r')
 id = 0
 
 for key in hf.keys():
@@ -11,14 +11,17 @@ for key in hf.keys():
     id+=1
 print(attributes)
 tsl = hf.get('global_test_loss')
-trl = hf.get('global_test_accuracy')
-tsa = hf.get('global_train_loss')
+tsa = hf.get('global_test_accuracy')
+trl = hf.get('global_train_loss')
 tra = hf.get('global_train_accuracy')
-
-print("train accuracy",np.array(tra))
+eta = hf.get('eta_0')
+lamda = hf.get('lambda_0')
+print("eta 0", np.array(eta))
+print("lamda 0", np.array(lamda))
+#print("train accuracy",np.array(tra))
 print("test accuracy",np.array(tsa))
-print("train loss",np.array(trl))
-print("test loss",np.array(tsl))
+#print("train loss",np.array(trl))
+#print("test loss",np.array(tsl))
 # print(np.array(gtra))
 
 

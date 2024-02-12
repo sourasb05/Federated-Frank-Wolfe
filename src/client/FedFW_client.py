@@ -6,72 +6,85 @@ import random
 from torch.utils.data import DataLoader
 from src.utils.oracles import LMO_l1, LMO_l2
 from src.Optimizer import FedFW
+import torch.nn.init as init
 
 class FedFW_Client():
 
-    def __init__(self, 
+    def __init__(self,
+                args, 
                 model, 
-                optimizer_name,
                 loss,
-                n,  # number of participating clients
                 train_set, 
                 test_set, 
-                local_iters, 
                 eta_t,
-                lambda_0,  # regularizer
-                eta_type,
-                lambda_type,
-                kappa, # Constraint 
-                batch_size, 
+                lambda_0,  
                 data_ratio, 
                 device):
-        
+        """
+        Models
+        """
         self.x_it = copy.deepcopy(model)  # local model
-        self.x_bar_t = copy.deepcopy(model) # global_model
-        
+        self.s_it = copy.deepcopy(model) # step direction
         self.eval_model = copy.deepcopy(model) # evaluate global model
-        self.model_bar = copy.deepcopy(list(self.x_it.parameters()))
-        self.train_samples = len(train_set)
-        self.test_samples = len(test_set)
-        self.local_iters = local_iters
+        
+       
+        """
+        Hyperparameters
+        """
         self.lambda_0 = lambda_0
-        self.kappa = kappa
-        self.batch_size = batch_size
+        self.kappa = args.kappa
+        self.batch_size = args.batch_size
+        self.optimizer_name = args.optimizer
+        self.batch_size = args.batch_size
         self.device = device
-        self.optimizer_name = optimizer_name
         self.loss = loss
         self.data_ratio = data_ratio
+
+
+        """
+        Train and test sets
+        """
+        self.train_samples = len(train_set)
+        self.test_samples = len(test_set)
         
-        self.trainloader = DataLoader(train_set, self.batch_size)
-        self.testloader =  DataLoader(test_set, self.batch_size)
-        
-        self.testloaderfull = DataLoader(test_set, self.test_samples)
+        if args.local_iters == 1:
+            self.trainloader = DataLoader(train_set, self.train_samples)
+            self.testloader =  DataLoader(test_set, self.test_samples)
+            self.iter_trainloader = iter(self.trainloader)   
+            self.iter_testloader = iter(self.testloader) 
+            self.local_iters = 1  
+        else:
+            self.trainloader = DataLoader(train_set, self.batch_size)
+            self.testloader =  DataLoader(test_set, self.batch_size)
+            self.iter_trainloader = iter(self.trainloader)   
+            self.iter_testloader = iter(self.testloader)
+            self.local_iters = math.ceil(torch.div(self.train_samples, self.batch_size))
+            
+
         self.trainloaderfull = DataLoader(train_set, self.train_samples)
-        self.iter_trainloader = iter(self.trainloader)   
-        self.iter_testloader = iter(self.testloader)   
+        self.testloaderfull = DataLoader(test_set, self.test_samples)
         self.iter_trainloaderfull = iter(self.trainloaderfull)   
         self.iter_testloaderfull = iter(self.testloaderfull)      
         
-        self.participation_prob = 1.0
-        self.n = n # number of participating clients
+        
+        
+
+        
+        
+        # self.participation_prob = 1.0
+        # self.n = n # number of participating clients
     
         # self.optimizer = FW(self.x_it.parameters(), eta_t=self.eta_t, kappa=self.kappa, device=self.device)
         self.optimizer = FedFW(self.x_it.parameters(),
-                                server_model=self.x_bar_t,
                                 lambda_0=self.lambda_0,
-                                eta_t=self.eta_t,
-                                eta_type=eta_type,
-                                lambda_type=lambda_type,
-                                num_client_iter=local_iters,
+                                eta_t=eta_t,
+                                eta_type=args.eta_type,
+                                lambda_type=args.lambda_type,
+                                num_client_iter=self.local_iters,
                                 step_direction_func=LMO_l2,
-                                alpha=kappa)
+                                kappa=args.kappa)
      
-    def selection(self):
-        outcomes = [0,1]
-        weights = [1-self.participation_prob, self.participation_prob]
-        participation_choice = random.choices(outcomes, weights=weights)[0]
-
-        return participation_choice
+    
     
     def get_next_batch(self):
         try:
@@ -87,35 +100,10 @@ class FedFW_Client():
         return (X.to(self.device), y.to(self.device))
         
     def set_parameters(self, glob_model):
-        for x_bar_t_param, g_param in zip(self.x_bar_t.parameters(), glob_model.parameters()):
-            x_bar_t_param.data = g_param.data
+        for x_it_param, g_param in zip(self.x_it.parameters(), glob_model.parameters()):
+            x_it_param.data = g_param.data.clone()
 
-    def update_local_parameters(self):
-        for param, new_param in zip(self.x_it.parameters(), self.model_bar):
-            param.data = new_param.clone()
-
-    def compare_networks(self):
-        params1 = list(self.x_it.parameters())
-        params2 = list(self.x_bar_t.parameters())
-        if len(params1) != len(params2):
-            print("len(params1) != len(params2)")
-        else:
-            print("lenth ok")
-        for p1, p2 in zip(params1, params2):
-            if p1.shape != p2.shape:
-                print("p1.shape != p2.shape")
-            else:
-                print("shape ok")    
-
-    def set_zero(self):
-        for param in self.x_it.parameters():
-            param.data.zero_()
-
-    def set_server_parameters(self, model):
-        for old_param, new_param in zip(self.model.parameters(), model.parameters()):
-            old_param.data = new_param.data.clone()
-        self.optimizer.set_server_model(model)
-
+    
     def get_step_directions(self):
         state_dict = self.optimizer.state_dict()
         return [state_dict['state'][key]["step_direction"] for key in state_dict['state'].keys()]
@@ -125,19 +113,17 @@ class FedFW_Client():
         eta_t_list = [state_dict['state'][key]["eta_t"] for key in state_dict['state'].keys()]
         return eta_t_list[0]
 
-
-    def local_train(self):
-     
-     for iters in range(0, self.local_iters):
+    
+    def local_train(self, x_bar_t):
+        self.x_it.train()
             
-            self.x_it.train()
+        for iters in range(0, self.local_iters):
             X, y = self.get_next_batch()
             self.optimizer.zero_grad()
             output = self.x_it(X)
             loss = self.loss(output, y)
             loss.backward()
-            self.optimizer.step()
-            # self.update_local_parameters()
+            self.optimizer.step(x_bar_t)
     
     def update_eval_parameters(self, new_params):
         for param, new_param in zip(self.eval_model.parameters(), new_params):

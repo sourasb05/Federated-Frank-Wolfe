@@ -8,45 +8,48 @@ from src.Optimizer import MySGD
 
 class Fed_Avg_Client():
 
-    def __init__(self, 
+    def __init__(self,
+                 args, 
                  model, 
-                 optimizer_name, 
                  loss, 
                  train_set, 
                  test_set, 
-                 local_iters, 
-                 learning_rate, 
-                 batch_size, 
                  data_ratio, 
                  device):
         
         self.local_model = copy.deepcopy(model)
+        self.eval_model = copy.deepcopy(model)
         self.train_samples = len(train_set)
         self.test_samples = len(test_set)
-        self.local_iters = local_iters
-        self.learning_rate = learning_rate
-        self.batch_size = batch_size
         self.device = device
-        self.optimizer_name = optimizer_name
         self.loss = loss
         self.data_ratio = data_ratio
+
+        self.local_iters = args.local_iters
+        self.learning_rate = args.lr
+        self.batch_size = args.batch_size
+        self.optimizer_name = args.optimizer
         
-        if optimizer_name == "GD" or optimizer_name == "PGD":
+        
+        if self.optimizer_name == "GD" or self.optimizer_name == "PGD":
             self.trainloader = DataLoader(train_set, self.train_samples)
             self.testloader =  DataLoader(test_set, self.test_samples)
             self.tot_epoch = 1
-            self.optimizer = MySGD(self.local_model.parameters(), lr=self.learning_rate)
+            
 
 
-        elif optimizer_name == "SGD" or optimizer_name == "PSGD":
+        elif self.optimizer_name == "SGD" or self.optimizer_name == "PSGD":
             self.trainloader = DataLoader(train_set, self.batch_size)
             self.testloader =  DataLoader(test_set, self.batch_size)
             self.tot_epoch = math.ceil(torch.div(self.train_samples, self.batch_size))
-            self.optimizer = MySGD(self.local_model.parameters(), lr=self.learning_rate)
+        
+        else:
+            raise ValueError('No optimizer found')
+        
+        self.optimizer = MySGD(self.local_model.parameters(), lr=self.learning_rate)
         
        
-        else:
-            print("no optimizer found")
+        
         """
         1. evaluate testset
         2. evaluate trainset
@@ -98,6 +101,9 @@ class Fed_Avg_Client():
         """
         
         l2_norm = torch.norm(x.float(), p=2)
+        # print(l2_norm)
+        # print(radius)
+        # input("press")
         
         if l2_norm <= radius:
             return x
@@ -125,7 +131,7 @@ class Fed_Avg_Client():
             param_size.append(len(param.data.view(-1)))
           
         param_concat = torch.cat(all_param, dim=0)
-        l2_radius = 0.5
+        l2_radius = 10.0
         param_concat_proj = self.l2_projection(param_concat, l2_radius)
     
         
@@ -153,44 +159,45 @@ class Fed_Avg_Client():
 
         # self.local_model.parameters() = param_proj
               
+    def update_eval_parameters(self, new_params):
+        for param, new_param in zip(self.eval_model.parameters(), new_params):
+            param.data = new_param.data.clone()
 
 
     def local_train(self):
         
         self.local_model.train()
-        for iters in range(0, self.local_iters):
-            
-            for epoch in range(0, self.tot_epoch):
-                X, y = self.get_next_batch()
-                self.optimizer.zero_grad()
-                output = self.local_model(X)
-                loss = self.loss(output, y)
-                loss.backward()
-                self.optimizer.step()
+        for epoch in range(0, self.tot_epoch):
+            X, y = self.get_next_batch()
+            self.optimizer.zero_grad()
+            output = self.local_model(X)
+            loss = self.loss(output, y)
+            loss.backward()
+            self.optimizer.step()
         if self.optimizer_name == "PGD" or self.optimizer_name == "PSGD":
             self.projection()
 
 
-    def global_eval_train_data(self):
-        self.local_model.eval()
-        train_acc = 0
+    def global_eval_train_data(self, global_model):
+        self.eval_model.eval()
+        train_correct = 0
         loss = 0
+        self.update_eval_parameters(global_model.parameters())
         for x, y in self.trainloaderfull:
             x, y = x.to(self.device), y.to(self.device)
             output = self.local_model(x)
-            train_acc += (torch.sum(torch.argmax(output, dim=1) == y)).item()
+            train_correct += (torch.sum(torch.argmax(output, dim=1) == y)).item()
             loss += self.loss(output, y)
-            # avg_test_acc = test_acc / y.shape[0]
-        return train_acc, y.shape[0], loss
+        return train_correct, y.shape[0], loss
 
-    def global_eval_test_data(self):
-        self.local_model.eval()
-        test_acc = 0
+    def global_eval_test_data(self, global_model):
+        self.eval_model.eval()
+        test_correct = 0
         loss = 0
+        self.update_eval_parameters(global_model.parameters())
         for x, y in self.testloaderfull:
             x, y = x.to(self.device), y.to(self.device)
             output = self.local_model(x)
-            test_acc += (torch.sum(torch.argmax(output, dim=1) == y)).item()
+            test_correct += (torch.sum(torch.argmax(output, dim=1) == y)).item()
             loss += self.loss(output, y)
-            # avg_test_acc = test_acc / y.shape[0]
-        return test_acc, y.shape[0], loss
+        return test_correct, y.shape[0], loss

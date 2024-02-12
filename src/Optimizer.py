@@ -20,61 +20,64 @@ class FedFW(Optimizer):
 
     def __init__(self,
                     params, 
-                    server_model, 
                     lambda_0: float, 
                     eta_t: float,
                     eta_type: str,
                     lambda_type: str,
                     num_client_iter: int,
                     step_direction_func: Callable[[torch.Tensor, float], torch.Tensor], 
-                    alpha: float):
+                    kappa: float):
         
-        if not 0.0 <= lambda_0:
+        if  lambda_0 <= 0.0:
             raise ValueError("Invalid starting Frank-Wolfe penalty parameter lambda {} - should be in >= 0".format(lambda_0))
-        if not 0 < num_client_iter:
+        if num_client_iter <= 0.0:
             raise ValueError("Invalid total number of client iterations {} - should be in > 0".format(num_client_iter))
-        if not 0.0 < alpha:
-            raise ValueError("Invalid threshold for constraint set {} - should be in >= 0".format(alpha))
+        if kappa <= 0.0:
+            raise ValueError("Invalid threshold for constraint set {} - should be in >= 0".forma(kappa))
 
         defaults = dict(
             lambda_0=lambda_0,
             eta_t=eta_t,
             num_client_iter=num_client_iter,
             step_direction_func=step_direction_func,
-            alpha=alpha
+            kappa=kappa
             )
         
-        self.server_model = copy.deepcopy(server_model)
+        
         self.eta_type = eta_type
         self.lambda_type = lambda_type
         super(FedFW, self).__init__(params, defaults)
 
 
-    def step(self, closure=None):
+    def step(self, server_model, closure=None):
         loss = None
         if closure is not None:
             loss = closure
 
         for group in self.param_groups:
-            for (server_p, p) in zip(self.server_model.parameters(), group['params']):
+            for (server_p, p) in zip(server_model.parameters(), group['params']):
                 if p.grad is None:
                     continue
                 # grad = p.grad.data
                 # if grad.is_sparse:
                 #    raise RuntimeError('FedFW does not support sparse gradients')
                 state = self.state[p]
+                
                 if len(state) == 0:
                     state['step'] = 1
                     state['step_direction'] = torch.zeros_like(p.data)
                     state['eta_t'] = 1
-
+                
+                
                 step = state['step']
 
                 lambda_0 = group['lambda_0']
                 step_direction_func = group['step_direction_func']
-                alpha = group['alpha']
+                kappa = group['kappa']
                 
                 num_client_iter = group['num_client_iter']
+                
+            
 
                 # Compute eta_t and lambda_t
                 # print(step)
@@ -93,16 +96,12 @@ class FedFW(Optimizer):
                 # grad.mul_(1 / num_client_iter).add_(p.data - server_p.data, alpha=lambda_t)
                 grad = (1/ 10)*p.grad.data + lambda_t*(p.data - server_p.data)
                 # Compute step direction from g_i^t
-                fw_step_direction = step_direction_func(grad, alpha)
-                # print(fw_step_direction)
-                # input("press")
-                # x_i^{t + 1} = (1 - eta_t)*x_i^t + eta_t*s_i^t
+                fw_step_direction = step_direction_func(grad, kappa)
+                
+                
                 p.data.mul_(1 - eta_t).add_(fw_step_direction, alpha=eta_t)
-                # p.data.mul_(1 - eta_t).add_(grad, alpha=eta_t)
-                # p.data = (1 -  eta_t)*p.data + eta_t*grad
-               #  p.data.mul_(1 - eta_t).add_(grad, alpha=eta_t)
+                
                 state['step'] += 1
-                # state["step_direction"] = fw_step_direction
                 state["eta_t"] = eta_t
         return loss
 
@@ -127,3 +126,67 @@ class MySGD(Optimizer):
                 p.data = p.data - (group['lr'] * d_p)
         
         return loss
+
+
+
+class PerturbedSGD(Optimizer):
+    """Perturbed SGD optimizer"""
+
+    def __init__(self, params, lr=0.01, alpha=0.0):
+
+        if lr < 0.0:
+            raise ValueError("Invalid learning rate: {}".format(lr))
+
+        defaults = dict(lr=lr, alpha=alpha)
+        self.idx = 0
+
+        super(PerturbedSGD, self).__init__(params, defaults)
+    
+    def step(self, y_ik, closure=None):
+        """Performs a single optimization step.
+
+        Arguments:
+            closure (callable, optional): A closure that reevaluates the model
+                and returns the loss.
+        """
+        loss = None
+        if closure is not None:
+            loss = closure
+
+        yik_update = y_ik.parameters()
+        # internal sgd update
+        for group in self.param_groups:
+            #get the lr
+            lr = group['lr']
+            alpha = group['alpha']
+
+            for param, y_param in zip(group['params'], yik_update):
+                param.grad.data = param.grad.data + alpha*(param.data - y_param.data)
+                param.data = param.data -lr*param.grad.data
+                
+       
+        return group['params'], loss
+    
+
+    """ 
+        for group in self.param_groups:
+            for p in group['params']:
+                state = self.state[p]
+                state['v_star'] = torch.zeros_like(p)
+                
+    def update_v_star(self, v_star):
+
+        current_index = 0
+
+        for group in self.param_groups:
+            for p in group['params']:
+                numel = p.data.numel()
+                size = p.data.size()
+
+                state = self.state[p]
+                state['v_star'] = (v_star[current_index:current_index+numel].view(size)).clone()
+
+                current_index += numel
+
+    @torch.no_grad()
+""" 

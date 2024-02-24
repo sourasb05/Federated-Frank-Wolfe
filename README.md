@@ -1,7 +1,7 @@
 # The repository contains code base for different federated learning algorithms and their implementations in python. 
 
 Algorithms
-1) FedAvg
+1) FedAvg 
 2) FedDR
 3) FedFW
 4) FedFW+
@@ -10,14 +10,11 @@ Algorithms
 non-convex settings
 1) CNN
 2) DNN
-3) Matrix complition problem
-4) QAP
+
 
 Convex settings
 1) MCLR
-2) LASSO
-
-
+2) 
 # Datasets
 1) Mnist
 2) FMnist

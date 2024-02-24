@@ -19,7 +19,7 @@ class FedFW(Optimizer):
     """
 
     def __init__(self,
-                    params, 
+                    params,
                     lambda_0: float, 
                     eta_t: float,
                     eta_type: str,
@@ -49,13 +49,13 @@ class FedFW(Optimizer):
         super(FedFW, self).__init__(params, defaults)
 
 
-    def step(self, server_model, closure=None):
+    def step(self, s_it, server_model, closure=None):
         loss = None
         if closure is not None:
             loss = closure
 
         for group in self.param_groups:
-            for (server_p, p) in zip(server_model.parameters(), group['params']):
+            for (server_p, p, s) in zip(server_model.parameters(), group['params'], s_it.parameters()):
                 if p.grad is None:
                     continue
                 # grad = p.grad.data
@@ -96,14 +96,23 @@ class FedFW(Optimizer):
                 # grad.mul_(1 / num_client_iter).add_(p.data - server_p.data, alpha=lambda_t)
                 grad = (1/ 10)*p.grad.data + lambda_t*(p.data - server_p.data)
                 # Compute step direction from g_i^t
+                
                 fw_step_direction = step_direction_func(grad, kappa)
-                
-                
+                # print("101 :", fw_step_direction)
+
+               
+                s.data = fw_step_direction.clone()
+          
                 p.data.mul_(1 - eta_t).add_(fw_step_direction, alpha=eta_t)
                 
                 state['step'] += 1
                 state["eta_t"] = eta_t
-        return loss
+        
+        # for s in s_it.parameters():
+        #    print(s.data)
+        # input("press")
+        l_s_it = copy.deepcopy(list(s_it.parameters()))
+        return loss , l_s_it
 
 
 

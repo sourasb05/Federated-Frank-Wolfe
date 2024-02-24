@@ -70,6 +70,11 @@ def convergence_analysis(path, acc_file, loss_file):
     Fedprox_train_loss = []
     Fedprox_train_accuracy = []
 
+    Feddr_test_loss = []
+    Feddr_test_accuracy = []
+    Feddr_train_loss = []
+    Feddr_train_accuracy = []
+
     FedFW_cel_test_loss = []
     FedFW_cel_test_accuracy = []
     FedFW_cel_train_loss = []
@@ -82,7 +87,7 @@ def convergence_analysis(path, acc_file, loss_file):
 
 
     for file_name in dir_list:
-        if file_name in ['fedavg_gd.h5','fedavg_sgd.h5', 'fedavg_pgd.h5', 'fedavg_psgd.h5', 'fedfw_cel.h5', 'fedfw_tel.h5', 'fedprox.h5']:
+        if file_name in ['fedavg_gd.h5','fedavg_sgd.h5', 'fedavg_pgd.h5', 'fedavg_psgd.h5', 'fedfw_cel.h5', 'fedfw_tel.h5', 'fedprox.h5', 'feddr.h5']:
             print(file_name)
             attributes, hf = read_file(path+file_name)
 
@@ -134,6 +139,13 @@ def convergence_analysis(path, acc_file, loss_file):
                 Fedprox_test_loss.append(np.array(val_loss).tolist())
                 Fedprox_test_accuracy.append(np.array(val_acc).tolist())
 
+            elif file_name == "feddr.h5":
+
+                Feddr_train_loss.append(np.array(train_loss).tolist())
+                Feddr_train_accuracy.append(np.array(train_acc).tolist())
+                Feddr_test_loss.append(np.array(val_loss).tolist())
+                Feddr_test_accuracy.append(np.array(val_acc).tolist())
+
             elif file_name == "fedfw_cel.h5":
 
                 FedFW_cel_train_loss.append(np.array(train_loss).tolist())
@@ -155,6 +167,7 @@ def convergence_analysis(path, acc_file, loss_file):
         'FedavgPGD' :   Fedavg_pgd_train_loss[0][:],
         'FedavgPSGD' : Fedavg_psgd_train_loss[0][:],
         'Fedprox' : Fedprox_train_loss[0][:],
+        'Feddr' : Feddr_train_loss[0][:],
         'Fedfw_cel' : FedFW_cel_train_loss[0][:],
         'Fedfw_tel' : FedFW_tel_train_loss[0][:],
              
@@ -167,6 +180,7 @@ def convergence_analysis(path, acc_file, loss_file):
         'FedavgPGD' :   Fedavg_pgd_train_accuracy[0][:],
         'FedavgPSGD' : Fedavg_psgd_train_accuracy[0][:],
         'Fedprox' : Fedprox_train_accuracy[0][:],
+        'Feddr' : Feddr_train_accuracy[0][:],
         'Fedfw_cel' : FedFW_cel_train_accuracy[0][:],
         'Fedfw_tel' : FedFW_tel_train_accuracy[0][:] 
              
@@ -179,6 +193,7 @@ def convergence_analysis(path, acc_file, loss_file):
         'FedavgPGD' :   Fedavg_pgd_test_loss[0][:],
         'FedavgPSGD' : Fedavg_psgd_test_loss[0][:],
         'Fedprox' : Fedprox_test_loss[0][:],
+        'Feddr' : Feddr_test_loss[0][:],
         'Fedfw_cel' : FedFW_cel_test_loss[0][:],
         'Fedfw_tel' : FedFW_tel_test_loss[0][:] 
              
@@ -191,6 +206,7 @@ def convergence_analysis(path, acc_file, loss_file):
         'FedavgPGD' :   Fedavg_pgd_test_accuracy[0][:],
         'FedavgPSGD' : Fedavg_psgd_train_accuracy[0][:],
         'Fedprox' : Fedprox_test_accuracy[0][:],
+        'Feddr' : Feddr_test_accuracy[0][:],
         'Fedfw_cel' : FedFW_cel_test_accuracy[0][:],
         'Fedfw_tel' : FedFW_tel_test_accuracy[0][:] 
                   
@@ -242,6 +258,10 @@ def convergence_analysis(path, acc_file, loss_file):
                     Fedprox_test_accuracy[0],
                     Fedprox_train_loss[0],
                     Fedprox_train_accuracy[0],
+                    Feddr_test_loss[0],
+                    Feddr_test_accuracy[0],
+                    Feddr_train_loss[0],
+                    Feddr_train_accuracy[0],
                     FedFW_cel_test_loss[0],
                     FedFW_cel_test_accuracy[0],
                     FedFW_cel_train_loss[0],
@@ -271,6 +291,10 @@ def plot_convergence(#Fedavg_gd_test_loss,
                     Fedprox_test_accuracy,
                     Fedprox_train_loss,
                     Fedprox_train_accuracy,
+                    Feddr_test_loss,
+                    Feddr_test_accuracy,
+                    Feddr_train_loss,
+                    Feddr_train_accuracy,
                     FedFW_cel_test_loss,
                     FedFW_cel_test_accuracy,
                     FedFW_cel_train_loss,
@@ -288,6 +312,7 @@ def plot_convergence(#Fedavg_gd_test_loss,
         ax[0].plot(Fedavg_pgd_test_loss, label= "FedAvg+PGD")
         ax[0].plot(Fedavg_psgd_test_loss, label= "FedAvg+PSGD")
         ax[0].plot(Fedprox_test_loss, label= "FedProx")
+        ax[0].plot(Feddr_test_loss, label= "FedDR")
         ax[0].plot(FedFW_cel_test_loss, label= "FedFW_cel")
         ax[0].plot(FedFW_tel_test_loss, label= "FedFW_tel")
         ax[0].set_xlabel("Global Iteration")
@@ -302,6 +327,7 @@ def plot_convergence(#Fedavg_gd_test_loss,
         axins.plot(Fedavg_pgd_test_loss)
         axins.plot(Fedavg_psgd_test_loss)
         axins.plot(Fedprox_test_loss) 
+        axins.plot(Feddr_test_loss) 
         axins.plot(FedFW_cel_test_loss) 
         axins.plot(FedFW_tel_test_loss)
         axins.set_xlim(x1, x2)
@@ -313,6 +339,7 @@ def plot_convergence(#Fedavg_gd_test_loss,
         ax[1].plot(Fedavg_pgd_test_accuracy, label= "FedAvg+PGD")
         ax[1].plot(Fedavg_psgd_test_accuracy, label= "FedAvg+PSGD")
         ax[1].plot(Fedprox_test_accuracy, label= "FedProx")
+        ax[1].plot(Feddr_test_accuracy, label= "FedDR")
         ax[1].plot(FedFW_cel_test_accuracy, label= "FedFW_cel")
         ax[1].plot(FedFW_tel_test_accuracy, label= "FedFW_tel")
         ax[1].set_xlabel("Global Iteration")
@@ -325,6 +352,7 @@ def plot_convergence(#Fedavg_gd_test_loss,
         axins.plot(Fedavg_pgd_test_accuracy)
         axins.plot(Fedavg_psgd_test_accuracy)
         axins.plot(Fedprox_test_accuracy) 
+        axins.plot(Feddr_test_accuracy) 
         axins.plot(FedFW_cel_test_accuracy)
         axins.plot(FedFW_tel_test_accuracy) 
         axins.set_xlim(x1, x2)
@@ -336,6 +364,7 @@ def plot_convergence(#Fedavg_gd_test_loss,
         ax[2].plot(Fedavg_pgd_train_loss , label= "FedAvg+PGD")
         ax[2].plot(Fedavg_psgd_train_loss, label= "FedAvg+PSGD")
         ax[2].plot(Fedprox_train_loss, label= "FedProx")
+        ax[2].plot(Feddr_train_loss, label= "FedDR")
         ax[2].plot(FedFW_cel_train_loss, label= "FedFW_cel")
         ax[2].plot(FedFW_tel_train_loss, label= "FedFW_tel")
         ax[2].set_xlabel("Global Iteration")
@@ -350,6 +379,7 @@ def plot_convergence(#Fedavg_gd_test_loss,
         axins.plot(Fedavg_pgd_train_loss, label="FedAvg+PGD")
         axins.plot(Fedavg_psgd_train_loss, label= "FedAvg+PSGD")
         axins.plot(Fedprox_train_loss, label= "FedProx")
+        axins.plot(Feddr_train_loss, label= "FedDR")
         axins.plot(FedFW_cel_train_loss, label= "FedFW_cel")
         axins.plot(FedFW_tel_train_loss, label= "FedFW_tel")
         axins.set_xlim(x1, x2)
@@ -361,6 +391,7 @@ def plot_convergence(#Fedavg_gd_test_loss,
         ax[3].plot(Fedavg_pgd_train_accuracy, label= "FedAvg+PGD")
         ax[3].plot(Fedavg_psgd_train_accuracy, label= "FedAvg+PSGD")
         ax[3].plot(Fedprox_train_accuracy, label= "FedProx")
+        ax[3].plot(Feddr_train_accuracy, label= "FedDR")
         ax[3].plot(FedFW_cel_train_accuracy, label= "FedFW_cel")
         ax[3].plot(FedFW_tel_train_accuracy, label= "FedFW_tel")
         ax[3].set_xlabel("Global Iteration")
@@ -375,13 +406,14 @@ def plot_convergence(#Fedavg_gd_test_loss,
         axins.plot(Fedavg_pgd_train_accuracy)
         axins.plot(Fedavg_psgd_train_accuracy)
         axins.plot(Fedprox_train_accuracy) 
+        axins.plot(Feddr_train_accuracy) 
         axins.plot(FedFW_cel_train_accuracy)
         axins.plot(FedFW_tel_train_accuracy) 
         axins.set_xlim(x1, x2)
         axins.set_ylim(y1, y2)
         axins.indicate_inset_zoom(axins, edgecolor="black")
         handles, labels = ax[3].get_legend_handles_labels()
-        fig.legend(handles, labels, loc='upper center', ncol=5, fontsize=12)
+        fig.legend(handles, labels, loc='upper center', ncol=6, fontsize=12)
 
 
         plt.draw()
@@ -400,7 +432,7 @@ def average_result(path,directory_name, algorithm, avg_file):
     i=0
     train_loss, train_accuracy, test_loss, test_accuracy = [], [], [], []
 
-    if algorithm in [ "FedavgGD", "FedavgSGD", "FedavgPGD", "FedavgPSGD", "Fedprox", "Fedfw" ]:
+    if algorithm in [ "FedavgGD", "FedavgSGD", "FedavgPGD", "FedavgPSGD", "Fedprox", "Fedfw", "Feddr" ]:
         for file_name in dir_list:
             
             
@@ -479,22 +511,14 @@ def average_result(path,directory_name, algorithm, avg_file):
 Get the average of accuracy and loss
 """
 
-# path = "/proj/sourasb-220503/codebase/FedFWplus/results/FedFW/MNIST/MCLR/time_varing_eta/time_varing_lambda/perf/10/"
-# path = "/proj/sourasb-220503/codebase/FedFWplus/results/FedProx/MNIST/CNN/perf/3/"
-# path = "/proj/sourasb-220503/codebase/FedFWplus/results/FedProx/SYNTHETIC/DNN/perf/3/"
-# path = "/proj/sourasb-220503/codebase/FedFWplus/results/FedFW/MNIST/MCLR/constant_eta/constant_lambda/perf/10/"
-# directory_name = "./results/convergence/MNIST/10/mclr/"
-#average_result(path, directory_name, 'Fedfw', 'fedfw_tel')
-# average_result(path, 'FedavgSGD', 'fedavg_sgd.h5')
-# average_result(path, 'FedavgPGD', 'fedavg_pgd.h5')
-# average_result(path, 'FedavgPSGD', 'fedavg_psgd.h5')
-# average_result(path, 'Fedprox', 'fedprox.h5')
-# average_result(path, 'Fedfw', 'fedfw.h5')
+path = "/proj/sourasb-220503/codebase/FedFWplus/results/FedFW/SYNTHETIC/MCLR/time_varing_eta/time_varing_lambda/perf/10/"
+directory_name = "/proj/sourasb-220503/codebase/FedFWplus/results/convergence/SYNTHETIC/10/mclr/"
+average_result(path, directory_name, 'Fedfw', 'fedfw')
 
 
-
-path = "/proj/sourasb-220503/codebase/FedFWplus/results/convergence/MNIST/10/mclr/"
+"""path = "/proj/sourasb-220503/codebase/FedFWplus/results/convergence/MNIST/10/mclr/"
 acc_file = "accuracy_sota"
 loss_file = "loss_sota"
 
 convergence_analysis(path, acc_file, loss_file)
+"""

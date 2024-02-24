@@ -9,11 +9,13 @@ import matplotlib.pyplot as plt
 from src.client.FedFW_client import FedFW_Client
 from src.utils.utils import read_data, read_user_data, select_users
 import torch.nn.init as init
+import torch
 
 class FedFW_Server():
     def __init__(self, args, model, loss, device):
         self.x_bar_t = copy.deepcopy(model)
-        self.sum_sit = copy.deepcopy(model)
+        self.s_bar_t = copy.deepcopy(model)
+        self.loaded_global_model = copy.deepcopy(model)
         self.aggregator_name = args.fl_aggregator
         self.fl_algorithm = args.fl_algorithm
         self.global_iters = args.global_iters
@@ -57,13 +59,52 @@ class FedFW_Server():
                                 device)   # Creating the instance of the users. 
                     
             self.users.append(user)
+
+    def save_model(self, glob_iter, model_name):
+        if model_name == "step_direction":
+            model_path = "./models/step_direction/"
+            print(model_path)
+            # input("press")
+            if not os.path.exists(model_path):
+                os.makedirs(model_path)
+            print(f"saving global model at round {glob_iter}")
+            torch.save(self.s_bar_t, os.path.join(model_path, "step_direction_" + str(glob_iter)  + ".pt"))
+
+    def load_model(self):
+        model_path = "./models/step_direction/step_direction_99.pt"
+        
+        assert (os.path.exists(model_path))
+        self.loaded_global_model = torch.load(model_path)
+
+        for p in self.loaded_global_model.parameters():
+            print(p.grad.data)
+            input("press")
+            # print(p.grad.data)
+        
+
+    def model_exists(self):
+        return os.path.exists(os.path.join("models", self.dataset, "server" + ".pt"))
+
         
     def global_update(self,selected_users, t): 
         
         for user in selected_users:
             for x_bar_t_param, x_it_param in zip(self.x_bar_t.parameters(), user.x_it.parameters()):
                 x_bar_t_param.data += (1/len(selected_users))*x_it_param.data.clone()
+                x_bar_t_param.grad += (1/len(selected_users))*x_it_param.grad.data.clone()
+        for x_bar_t_param in self.x_bar_t.parameters():
+            print(f"x_bar_t grad {x_bar_t_param.grad.data}")
+            print(f"x_bar_t weights {x_bar_t_param.data}")
+        input("press")
+    def s_bar_t_update(self,selected_users, t): 
         
+        for user in selected_users:
+            for s_bar_t_param, s_it_param in zip(self.s_bar_t.parameters(), user.s_it.parameters()):
+                s_bar_t_param.grad.data += (1/len(selected_users))*s_it_param.data.clone()
+        
+        """for s in self.s_bar_t.parameters():
+            print(s.data)
+            input("press")"""
     def send_parameters(self, users):   
         if len(users) == 0:
             assert(f"AssertionError : The client can't be zero")
@@ -80,6 +121,16 @@ class FedFW_Server():
         for param in self.x_bar_t.parameters():
             if param.requires_grad:
                 init.zeros_(param)
+    
+    def initialize_s_bar_t_to_zero(self):
+        for param in self.s_bar_t.parameters():
+            if param.requires_grad:
+                init.zeros_(param)
+
+
+
+
+
     def train(self):
           
         for t in trange(self.global_iters):
@@ -91,8 +142,11 @@ class FedFW_Server():
                 user.local_train(self.x_bar_t)
             
             self.initialize_global_parameters_to_zero()
+            self.initialize_s_bar_t_to_zero()
+            self.s_bar_t_update(selected_users, t)
             self.global_update(selected_users, t)
             self.evaluate(self.users)  # evaluate global model
+            self.save_model(t, "step_direction")
                 
     def evaluate(self, users):
         tot_train_loss = 0

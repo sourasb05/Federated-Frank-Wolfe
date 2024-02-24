@@ -113,18 +113,28 @@ class FedFW_Client():
         eta_t_list = [state_dict['state'][key]["eta_t"] for key in state_dict['state'].keys()]
         return eta_t_list[0]
 
+    def initialize_s_it_to_zero(self):
+        for param in self.s_it.parameters():
+            if param.requires_grad:
+                init.zeros_(param)
     
     def local_train(self, x_bar_t):
         self.x_it.train()
-            
+        # self.initialize_s_it_to_zero()
         for iters in range(0, self.local_iters):
             X, y = self.get_next_batch()
             self.optimizer.zero_grad()
             output = self.x_it(X)
             loss = self.loss(output, y)
-            loss.backward()
-            self.optimizer.step(x_bar_t)
-    
+            
+            loss.backward(retain_graph=True)
+            __, list1 = self.optimizer.step(self.s_it, x_bar_t)
+        # print(list1)    
+        # input("press")
+        for original_param, new_param in zip(self.s_it.parameters(), list1):
+            original_param.grad = new_param.data.clone()
+
+         
     def update_eval_parameters(self, new_params):
         for param, new_param in zip(self.eval_model.parameters(), new_params):
             param.data = new_param.data.clone()

@@ -91,16 +91,16 @@ class FedFW_Server():
         for user in selected_users:
             for x_bar_t_param, x_it_param in zip(self.x_bar_t.parameters(), user.x_it.parameters()):
                 x_bar_t_param.data += (1/len(selected_users))*x_it_param.data.clone()
-                x_bar_t_param.grad += (1/len(selected_users))*x_it_param.grad.data.clone()
-        for x_bar_t_param in self.x_bar_t.parameters():
-            print(f"x_bar_t grad {x_bar_t_param.grad.data}")
-            print(f"x_bar_t weights {x_bar_t_param.data}")
-        input("press")
+                # x_bar_t_param.grad += (1/len(selected_users))*x_it_param.grad.data.clone()
+       #  for x_bar_t_param in self.x_bar_t.parameters():
+            #print(f"x_bar_t grad {x_bar_t_param.grad.data}")
+           # print(f"x_bar_t weights {x_bar_t_param.data}")
+       # input("press")
     def s_bar_t_update(self,selected_users, t): 
         
         for user in selected_users:
             for s_bar_t_param, s_it_param in zip(self.s_bar_t.parameters(), user.s_it.parameters()):
-                s_bar_t_param.grad.data += (1/len(selected_users))*s_it_param.data.clone()
+                s_bar_t_param.data += (1/len(selected_users))*s_it_param.data.clone()
         
         """for s in self.s_bar_t.parameters():
             print(s.data)

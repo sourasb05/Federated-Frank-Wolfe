@@ -101,10 +101,7 @@ class FedProx_Client():
             self.optimizer.zero_grad()
             output = self.local_model(X)
             loss = self.loss(output, y)
-            proximal_term = 0.0
-            for param, g_param in zip(self.local_model.parameters(), global_model.parameters()):
-                proximal_term += (self.lambda_prox / 2) * torch.norm(param - g_param) ** 2
-            loss += proximal_term
+            565
             loss.backward()
             self.optimizer.step()
 

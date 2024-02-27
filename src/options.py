@@ -20,8 +20,10 @@ def args_parser():
     parser.add_argument("--lambda_0", type=float, default=0.01)
     parser.add_argument("--kappa", type=float,  default=10.0)
     parser.add_argument("--global_iters", type=int, default=100)
-    parser.add_argument("--local_iters", type=int, default=1)
+    parser.add_argument("--local_iters", type=int, default=10)
     parser.add_argument("--batch_size", type=int, default=124)
+    parser.add_argument("--all_batch", type=int, default=1)
+
     parser.add_argument("--gpu", type=int, default=0, choices=[0,1,2,3,4,5,6,7,8] )
     parser.add_argument("--fl_aggregator", type=str, default="simple_averaging", choices = ["simple_averaging", "weighted_averaging"])
     parser.add_argument("--num_users", type=int, default=10, help="should be multiple of 10") 

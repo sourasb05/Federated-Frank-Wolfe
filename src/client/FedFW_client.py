@@ -36,6 +36,8 @@ class FedFW_Client():
         self.batch_size = args.batch_size
         self.optimizer_name = args.optimizer
         self.batch_size = args.batch_size
+        self.all_batch = args.all_batch
+        self.local_iters = args.local_iters
         self.device = device
         self.loss = loss
         self.data_ratio = data_ratio
@@ -47,18 +49,18 @@ class FedFW_Client():
         self.train_samples = len(train_set)
         self.test_samples = len(test_set)
         
-        if args.local_iters == 1:
+        if self.all_batch == 1:
             self.trainloader = DataLoader(train_set, self.train_samples)
             self.testloader =  DataLoader(test_set, self.test_samples)
             self.iter_trainloader = iter(self.trainloader)   
             self.iter_testloader = iter(self.testloader) 
-            self.local_iters = 1  
+            self.epochs = 1  
         else:
             self.trainloader = DataLoader(train_set, self.batch_size)
             self.testloader =  DataLoader(test_set, self.batch_size)
             self.iter_trainloader = iter(self.trainloader)   
             self.iter_testloader = iter(self.testloader)
-            self.local_iters = math.ceil(torch.div(self.train_samples, self.batch_size))
+            self.epochs = math.ceil(torch.div(self.train_samples, self.batch_size))
             
 
         self.trainloaderfull = DataLoader(train_set, self.train_samples)
@@ -122,13 +124,14 @@ class FedFW_Client():
         self.x_it.train()
         # self.initialize_s_it_to_zero()
         for iters in range(0, self.local_iters):
-            X, y = self.get_next_batch()
-            self.optimizer.zero_grad()
-            output = self.x_it(X)
-            loss = self.loss(output, y)
+            for epoch in range(self.epochs):
+                X, y = self.get_next_batch()
+                self.optimizer.zero_grad()
+                output = self.x_it(X)
+                loss = self.loss(output, y)
             
-            loss.backward(retain_graph=True)
-            __, list1 = self.optimizer.step(self.s_it, x_bar_t)
+                loss.backward(retain_graph=True)
+                __, list1 = self.optimizer.step(self.s_it, x_bar_t)
         # print(list1)    
         # input("press")
         for original_param, new_param in zip(self.s_it.parameters(), list1):

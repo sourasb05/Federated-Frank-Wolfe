@@ -32,7 +32,9 @@ Convex settings
 
 # Requirement
 
-numpy : conda install -c anaconda numpy
+conda create --name personalized_fl python==3.11
+
+numpy : conda install -c anaconda numpy scipy pandas h5py
 
 matplotlib : conda install matplotlib
 

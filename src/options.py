@@ -30,6 +30,9 @@ def args_parser():
     parser.add_argument("--num_users_perGR", type=int, default=10, help="should be <= num_users")
     parser.add_argument("--num_labels", type=int, default=3)  
     parser.add_argument("--iid", type=int, default=1, choices=[0, 1], help="0 : for iid , 1 : non-iid")
+    parser.add_argument("--run_dlg", action="store_true", help="Run deep leakage from gradient experiment")
+    parser.add_argument("--run_dls", action="store_true", help="Run deep leakage from FW step dir experiment")
+    parser.add_argument("--dlg_batch_size", type=int, default=8, help="Batch size for the deep leakage experiments.")
 
     args = parser.parse_args()
 

@@ -9,7 +9,7 @@ def args_parser():
     parser.add_argument("--model_name", type=str, default="MCLR",  choices=["CNN", "MCLR", "DNN"])
     parser.add_argument("--exp_no", type=int, default=0)
     parser.add_argument("--times", type=int, default=1)
-    parser.add_argument("--fl_algorithm", type=str, default= "FedFW", choices=["FedFW","FedAvg","FedDR", "FedProx"])
+    parser.add_argument("--fl_algorithm", type=str, default= "FedFW", choices=["FedFW","FedFW_Plus","FedAvg","FedDR", "FedProx"])
     parser.add_argument("--optimizer", type=str, default="FW", choices=["FW","GD", "SGD", "PGD", "PSGD", "PerturbedSGD"])
     parser.add_argument("--eta_type", type=str, default="constant_eta", choices=["constant_eta", "time_varing_eta"] )
     parser.add_argument("--lambda_type", type=str, default="constant_lambda", choices=["constant_lambda", "time_varing_lambda"])

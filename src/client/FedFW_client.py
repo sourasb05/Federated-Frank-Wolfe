@@ -25,9 +25,12 @@ class FedFW_Client():
         """
         self.x_it = copy.deepcopy(model)  # local model
         self.s_it = copy.deepcopy(model) # step direction
+        self.y_it = copy.deepcopy(model)
         self.eval_model = copy.deepcopy(model) # evaluate global model
         
-       
+        for param in self.y_it.parameters():
+            if param.requires_grad:
+                init.zeros_(param)
         """
         Hyperparameters
         """
@@ -38,6 +41,7 @@ class FedFW_Client():
         self.batch_size = args.batch_size
         self.all_batch = args.all_batch
         self.local_iters = args.local_iters
+        self.algorithm = args.fl_algorithm
         self.device = device
         self.loss = loss
         self.data_ratio = data_ratio
@@ -49,7 +53,7 @@ class FedFW_Client():
         self.train_samples = len(train_set)
         self.test_samples = len(test_set)
         
-        if self.all_batch == 1:
+        if self.all_batch == 0:
             self.trainloader = DataLoader(train_set, self.train_samples)
             self.testloader =  DataLoader(test_set, self.test_samples)
             self.iter_trainloader = iter(self.trainloader)   
@@ -84,7 +88,8 @@ class FedFW_Client():
                                 lambda_type=args.lambda_type,
                                 num_client_iter=self.local_iters,
                                 step_direction_func=LMO_l2,
-                                kappa=args.kappa)
+                                kappa=args.kappa,
+                                algorithm=args.fl_algorithm)
      
     
     
@@ -120,6 +125,7 @@ class FedFW_Client():
             if param.requires_grad:
                 init.zeros_(param)
     
+    
     def local_train(self, x_bar_t):
         self.x_it.train()
         # self.initialize_s_it_to_zero()
@@ -131,7 +137,7 @@ class FedFW_Client():
                 loss = self.loss(output, y)
             
                 loss.backward(retain_graph=True)
-                __, list1 = self.optimizer.step(self.s_it, x_bar_t)
+                __, list1 = self.optimizer.step(self.s_it, x_bar_t, self.y_it, self.algorithm)
         # print(list1)    
         # input("press")
         for original_param, new_param in zip(self.s_it.parameters(), list1):

@@ -45,7 +45,7 @@ class FedFW_Client():
         self.device = device
         self.loss = loss
         self.data_ratio = data_ratio
-
+        self.fw_gap = 0.0
 
         """
         Train and test sets
@@ -140,8 +140,18 @@ class FedFW_Client():
                 __, list1 = self.optimizer.step(self.s_it, x_bar_t, self.y_it, self.algorithm)
         # print(list1)    
         # input("press")
+        self.fw_gap = self.evaluate_FW_gap()
         for original_param, new_param in zip(self.s_it.parameters(), list1):
             original_param.grad = new_param.data.clone()
+
+    def evaluate_FW_gap(self):
+        gap = 0.0
+        for s_bar_t_param, local_param in zip(self.s_it.parameters(), self.x_it.parameters()):
+            gap += (-(s_bar_t_param.data - local_param.data)* local_param.grad.data).sum()
+        # print(f" Frank-wolfe gap at global round : {gap}")
+        return gap
+        # self.FW_gap.append(gap)    
+
 
          
     def update_eval_parameters(self, new_params):

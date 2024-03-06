@@ -110,7 +110,7 @@ class FedFW(Optimizer):
                 s.data = fw_step_direction.clone()
           
                 p.data.mul_(1 - eta_t).add_(fw_step_direction, alpha=eta_t)
-                
+                p.grad.data = grad
                 state['step'] += 1
                 state["eta_t"] = eta_t
         

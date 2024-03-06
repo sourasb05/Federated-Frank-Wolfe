@@ -27,11 +27,13 @@ class FedFW_Server():
         self.num_users_perGR = args.num_users_perGR
         self.exp_no = args.exp_no
         self.num_labels = args.num_labels
+        self.fw_gaps = 0.0
 
         self.avg_train_loss_list = []
         self.avg_test_loss_list = []
         self.avg_train_accuracy_list = []
         self.avg_test_accuracy_list = []
+        self.FW_gap = []
 
         if self.eta_type == "constant_eta":
            self. eta_t = args.eta_0 /  (args.global_iters ** (2/3))
@@ -91,11 +93,7 @@ class FedFW_Server():
         for user in selected_users:
             for x_bar_t_param, x_it_param in zip(self.x_bar_t.parameters(), user.x_it.parameters()):
                 x_bar_t_param.data += (1/len(selected_users))*x_it_param.data.clone()
-                # x_bar_t_param.grad += (1/len(selected_users))*x_it_param.grad.data.clone()
-       #  for x_bar_t_param in self.x_bar_t.parameters():
-            #print(f"x_bar_t grad {x_bar_t_param.grad.data}")
-           # print(f"x_bar_t weights {x_bar_t_param.data}")
-       # input("press")
+                
     def s_bar_t_update(self,selected_users, t): 
         
         for user in selected_users:
@@ -127,7 +125,7 @@ class FedFW_Server():
             if param.requires_grad:
                 init.zeros_(param)
 
-
+    
 
 
 
@@ -145,9 +143,17 @@ class FedFW_Server():
             self.initialize_s_bar_t_to_zero()
             self.s_bar_t_update(selected_users, t)
             self.global_update(selected_users, t)
+            self.evaluate_FW_gap(selected_users, t)
             self.evaluate(self.users)  # evaluate global model
-            self.save_model(t, "step_direction")
-                
+            # self.save_model(t, "step_direction")
+
+
+    def evaluate_FW_gap(self, users, t):
+        self.fw_gaps = 0.0
+        for user in users:
+            self.fw_gaps += user.fw_gap*(1/len(users))
+        print(f"Frank wolfe Gaps at global round {t} :", self.fw_gaps.item())
+        
     def evaluate(self, users):
         tot_train_loss = 0
         tot_test_loss = 0
@@ -210,7 +216,7 @@ class FedFW_Server():
    
         print(alg)
        
-        directory_name = self.fl_algorithm + "/" + self.dataset + "/" + str(self.model_name) + "/" + str(self.eta_type) + "/" + str(self.lambda_type) + "/perf/" + str(self.num_labels)
+        directory_name = self.fl_algorithm + "/" + self.dataset + "/" + str(self.model_name) + "/" + str(self.eta_type) + "/" + str(self.lambda_type) + "/hyperparameters/" + str(self.num_labels)
         # Check if the directory already exists
         if not os.path.exists("./results/"+directory_name):
         # If the directory does not exist, create it
@@ -229,6 +235,7 @@ class FedFW_Server():
             hf.create_dataset('global_train_loss', data=self.avg_train_loss_list)
             hf.create_dataset('global_test_accuracy', data=self.avg_test_accuracy_list)
             hf.create_dataset('global_test_loss', data=self.avg_test_loss_list)
+            hf.create_dataset('fw_gap',data=self.fw_gaps)
 
             hf.close()
 

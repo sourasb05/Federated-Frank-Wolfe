@@ -29,7 +29,7 @@ class Fed_Avg_Client():
         self.learning_rate = args.lr
         self.batch_size = args.batch_size
         self.optimizer_name = args.optimizer
-        
+        self.kappa = args.kappa
         
         if self.optimizer_name == "GD" or self.optimizer_name == "PGD":
             self.trainloader = DataLoader(train_set, self.train_samples)
@@ -131,7 +131,7 @@ class Fed_Avg_Client():
             param_size.append(len(param.data.view(-1)))
           
         param_concat = torch.cat(all_param, dim=0)
-        l2_radius = 10.0
+        l2_radius = self.kappa
         param_concat_proj = self.l2_projection(param_concat, l2_radius)
     
         

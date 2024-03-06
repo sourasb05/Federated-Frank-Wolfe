@@ -48,6 +48,7 @@ class FedFW(Optimizer):
         self.eta_type = eta_type
         self.lambda_type = lambda_type
         self.algorithm = algorithm
+        print()
         super(FedFW, self).__init__(params, defaults)
 
 

@@ -45,7 +45,7 @@ def main(args):
                 server = FedProx_Server(args, model, loss, device)
             # server.load_model()
             server.train()
-            # server.save_file()
+            server.save_file()
             #server.plot_result()
 
         args.exp_no+=1 

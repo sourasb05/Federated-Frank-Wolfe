@@ -27,7 +27,7 @@ class FedFW_Server():
         self.num_users_perGR = args.num_users_perGR
         self.exp_no = args.exp_no
         self.num_labels = args.num_labels
-        self.fw_gaps = 0.0
+        self.fw_gaps = []
 
         self.avg_train_loss_list = []
         self.avg_test_loss_list = []
@@ -149,10 +149,11 @@ class FedFW_Server():
 
 
     def evaluate_FW_gap(self, users, t):
-        self.fw_gaps = 0.0
+        gaps = 0.0
         for user in users:
-            self.fw_gaps += user.fw_gap*(1/len(users))
-        print(f"Frank wolfe Gaps at global round {t} :", self.fw_gaps.item())
+            gaps += user.fw_gap*(1/len(users))
+        self.fw_gaps.append(gaps.item())
+        print(f"Frank wolfe Gaps at global round {t} :", self.fw_gaps)
         
     def evaluate(self, users):
         tot_train_loss = 0

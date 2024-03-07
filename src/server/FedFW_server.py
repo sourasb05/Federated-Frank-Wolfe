@@ -27,6 +27,8 @@ class FedFW_Server():
         self.num_users_perGR = args.num_users_perGR
         self.exp_no = args.exp_no
         self.num_labels = args.num_labels
+        self.lambda_0 = args.lambda_0
+        self.eta_0 = args.eta_0
         self.fw_gaps = []
 
         self.avg_train_loss_list = []
@@ -210,14 +212,14 @@ class FedFW_Server():
         d1 = today.strftime("%d_%m_%Y")
        
         print("exp_no ", self.exp_no)
-        alg = str(self.exp_no) + "_dataset_" + str(self.dataset) + "_aggregator_" + str(self.aggregator_name) + "_fl_algorithm_" + str(self.fl_algorithm) + \
-            "_model_" + str(self.model_name) + "_lamdba_0_" + str(self.lambda_t) + "_eta_0_" + str(self.eta_t) + \
-            "_kappa_" + str(self.kappa) + "_global_iters_" + str(self.global_iters) + "_" + d1
+        # alg = str(self.exp_no) + "_dataset_" + str(self.dataset) + "_aggregator_" + str(self.aggregator_name) + "_fl_algorithm_" + str(self.fl_algorithm) + \
+        #    "_model_" + str(self.model_name) + "_lamdba_0_" + str(self.lambda_0) + "_eta_0_" + str(self.eta_0) + \
+        #    "_kappa_" + str(self.kappa) + "_global_iters_" + str(self.global_iters) + "_" + d1
         
-   
+	alg = str(self.exp_no) + "_lamdba_0_" + str(self.lambda_0) + "_eta_0_" + str(self.eta_0) + "_kappa_" + str(self.kappa) + "_global_iters_" + str(self.global_iters) + "_" + d1
         print(alg)
        
-        directory_name = self.fl_algorithm + "/" + self.dataset + "/" + str(self.model_name) + "/" + str(self.eta_type) + "/" + str(self.lambda_type) + "/hyperparameters/" + str(self.num_labels)
+        directory_name = self.fl_algorithm + "/" + self.dataset + "/" + str(self.model_name) + "/hyperparameters/" + str(self.num_labels)
         # Check if the directory already exists
         if not os.path.exists("./results/"+directory_name):
         # If the directory does not exist, create it

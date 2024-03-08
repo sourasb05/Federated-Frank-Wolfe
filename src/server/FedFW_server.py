@@ -216,7 +216,7 @@ class FedFW_Server():
         #    "_model_" + str(self.model_name) + "_lamdba_0_" + str(self.lambda_0) + "_eta_0_" + str(self.eta_0) + \
         #    "_kappa_" + str(self.kappa) + "_global_iters_" + str(self.global_iters) + "_" + d1
         
-	alg = str(self.exp_no) + "_lamdba_0_" + str(self.lambda_0) + "_eta_0_" + str(self.eta_0) + "_kappa_" + str(self.kappa) + "_global_iters_" + str(self.global_iters) + "_" + d1
+        alg = str(self.exp_no) + "_lamdba_0_" + str(self.lambda_0) + "_eta_0_" + str(self.eta_0) + "_kappa_" + str(self.kappa) + "_global_iters_" + str(self.global_iters) + "_" + d1
         print(alg)
        
         directory_name = self.fl_algorithm + "/" + self.dataset + "/" + str(self.model_name) + "/hyperparameters/" + str(self.num_labels)

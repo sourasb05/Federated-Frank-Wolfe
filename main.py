@@ -33,7 +33,7 @@ def main(args):
             
             print(args.dataset)
               
-            if args.fl_algorithm == "FedFW":
+            if args.fl_algorithm == "FedFW" or args.fl_algorithm == "FedFW_Plus":
                 server = FedFW_Server(args, model, loss, device)
                 
             elif args.fl_algorithm == "FedAvg":
@@ -45,7 +45,7 @@ def main(args):
                 server = FedProx_Server(args, model, loss, device)
             # server.load_model()
             server.train()
-            # server.save_file()
+            server.save_file()
             #server.plot_result()
 
         args.exp_no+=1 

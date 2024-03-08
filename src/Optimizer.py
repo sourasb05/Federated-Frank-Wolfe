@@ -26,7 +26,8 @@ class FedFW(Optimizer):
                     lambda_type: str,
                     num_client_iter: int,
                     step_direction_func: Callable[[torch.Tensor, float], torch.Tensor], 
-                    kappa: float):
+                    kappa: float,
+                    algorithm: str):
         
         if  lambda_0 <= 0.0:
             raise ValueError("Invalid starting Frank-Wolfe penalty parameter lambda {} - should be in >= 0".format(lambda_0))
@@ -46,16 +47,18 @@ class FedFW(Optimizer):
         
         self.eta_type = eta_type
         self.lambda_type = lambda_type
+        self.algorithm = algorithm
+        print()
         super(FedFW, self).__init__(params, defaults)
 
 
-    def step(self, s_it, server_model, closure=None):
+    def step(self, s_it, server_model, y_it, closure=None):
         loss = None
         if closure is not None:
             loss = closure
 
         for group in self.param_groups:
-            for (server_p, p, s) in zip(server_model.parameters(), group['params'], s_it.parameters()):
+            for (server_p, p, s, y_it_p) in zip(server_model.parameters(), group['params'], s_it.parameters(), y_it.parameters()):
                 if p.grad is None:
                     continue
                 # grad = p.grad.data
@@ -94,7 +97,11 @@ class FedFW(Optimizer):
 
                 # Compute g_i^t
                 # grad.mul_(1 / num_client_iter).add_(p.data - server_p.data, alpha=lambda_t)
-                grad = (1/ 10)*p.grad.data + lambda_t*(p.data - server_p.data)
+                if self.algorithm == "FedFW_plus":
+                    y_it_p.data += lambda_0*(p.data - server_p.data)
+                    grad = (1/ 10)*p.grad.data + lambda_t*(p.data - server_p.data) + y_it_p.data
+                else:
+                    grad = (1/ 10)*p.grad.data + lambda_t*(p.data - server_p.data)
                 # Compute step direction from g_i^t
                 
                 fw_step_direction = step_direction_func(grad, kappa)
@@ -104,7 +111,7 @@ class FedFW(Optimizer):
                 s.data = fw_step_direction.clone()
           
                 p.data.mul_(1 - eta_t).add_(fw_step_direction, alpha=eta_t)
-                
+                p.grad.data = grad
                 state['step'] += 1
                 state["eta_t"] = eta_t
         

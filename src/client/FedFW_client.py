@@ -81,7 +81,18 @@ class FedFW_Client():
         # self.n = n # number of participating clients
     
         # self.optimizer = FW(self.x_it.parameters(), eta_t=self.eta_t, kappa=self.kappa, device=self.device)
-        self.optimizer = FedFW(self.x_it.parameters(),
+        if args.lmo == "lmo_l1":
+            self.optimizer = FedFW(self.x_it.parameters(),
+                                lambda_0=self.lambda_0,
+                                eta_t=eta_t,
+                                eta_type=args.eta_type,
+                                lambda_type=args.lambda_type,
+                                num_client_iter=self.local_iters,
+                                step_direction_func=LMO_l1,
+                                kappa=args.kappa,
+                                algorithm=args.fl_algorithm)
+        else:
+            self.optimizer = FedFW(self.x_it.parameters(),
                                 lambda_0=self.lambda_0,
                                 eta_t=eta_t,
                                 eta_type=args.eta_type,

@@ -6,7 +6,7 @@ def args_parser():
 
     parser.add_argument("--dataset", type=str, default="MNIST", choices=["MNIST", "FMNIST", "CIFAR10", "EMNIST", "CIFAR100", "CELEBA", "SYNTHETIC", "MOVIELENS_1m", "MOVIELENS_100k"])
     parser.add_argument("--problem_type", type=str, default="NN", choices=["QAP", "NN", "Matrix_completion"])
-    parser.add_argument("--model_name", type=str, default="CNN",  choices=["CNN", "MCLR", "DNN"])
+    parser.add_argument("--model_name", type=str, default="MCLR",  choices=["CNN", "MCLR", "DNN"])
     parser.add_argument("--exp_no", type=int, default=0)
     parser.add_argument("--times", type=int, default=1)
     parser.add_argument("--fl_algorithm", type=str, default= "FedFW_Plus", choices=["FedFW","FedFW_Plus","FedAvg","FedDR", "FedProx"])
@@ -23,7 +23,7 @@ def args_parser():
     parser.add_argument("--local_iters", type=int, default=1)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--all_batch", type=int, default=1)
-    parser.add_argument("--lmo", type=str, default="lmo_l1", choices=["lmo_l1","lmo_l2"])
+    parser.add_argument("--lmo", type=str, default="lmo_l2", choices=["lmo_l1","lmo_l2"])
     parser.add_argument("--gpu", type=int, default=0, choices=[0,1,2,3,4,5,6,7,8] )
     parser.add_argument("--fl_aggregator", type=str, default="simple_averaging", choices = ["simple_averaging", "weighted_averaging"])
     parser.add_argument("--num_users", type=int, default=10, help="should be multiple of 10") 

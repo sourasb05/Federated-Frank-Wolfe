@@ -217,7 +217,7 @@ class FedFW_Server():
         #    "_model_" + str(self.model_name) + "_lamdba_0_" + str(self.lambda_0) + "_eta_0_" + str(self.eta_0) + \
         #    "_kappa_" + str(self.kappa) + "_global_iters_" + str(self.global_iters) + "_" + d1
         
-        alg = str(self.exp_no) + "LMO_" + str(self.lmo) + "_lamdba_0_" + str(self.lambda_0) + "_eta_0_" + str(self.eta_0) + "_kappa_" + str(self.kappa) + "_global_iters_" + str(self.global_iters) + "_" + d1
+        alg = "LMO_" + str(self.lmo) + "_lamdba_0_" + str(self.lambda_0) + "_eta_0_" + str(self.eta_0) + "_kappa_" + str(self.kappa) + "_labels_" + str(self.num_labels) + "_global_iters_" + str(self.global_iters) + "_" + d1
         print(alg)
        
         directory_name = self.fl_algorithm + "/" + self.dataset + "/" + str(self.model_name) + "/hyperparameters/" + str(self.lmo) + "/" + str(self.num_labels)
@@ -229,8 +229,8 @@ class FedFW_Server():
         with h5py.File("./results/"+ directory_name + "/" + '{}.h5'.format(alg), 'w') as hf:
             hf.create_dataset('exp_no', data=self.exp_no)
             hf.create_dataset('kappa', data=self.kappa) 
-            hf.create_dataset('lambda_0', data=self.lambda_t)
-            hf.create_dataset('eta_0', data=self.eta_t) 
+            hf.create_dataset('lambda_0', data=self.lambda_0)
+            hf.create_dataset('eta_0', data=self.eta_0) 
             hf.create_dataset('eta_type', data=self.eta_type)
             hf.create_dataset('lambda_type', data=self.lambda_type)
             hf.create_dataset('global_rounds', data=self.global_iters)

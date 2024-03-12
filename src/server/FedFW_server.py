@@ -10,6 +10,16 @@ from src.client.FedFW_client import FedFW_Client
 from src.utils.utils import read_data, read_user_data, select_users
 import torch.nn.init as init
 import torch
+# Package imports for DLG
+from torch.utils.data import DataLoader
+from PIL import Image
+from torchvision import transforms
+from src.utils.oracles import LMO_l2
+
+# Global variables and parameters
+tt = transforms.ToPILImage()
+NUM_CHANNELS = 1
+IMAGE_SIZE = 28
 
 class FedFW_Server():
     def __init__(self, args, model, loss, device):
@@ -51,7 +61,7 @@ class FedFW_Server():
         total_users = len(data[0])
         self.users = []
         for i in range(0,total_users):
-            train, test = read_user_data(i,data,args.dataset)
+            train, test = read_user_data(i, data, args.dataset)
             data_ratio = len(data[1])/len(train)
             user = FedFW_Client(args, 
                                 model, 
@@ -64,6 +74,17 @@ class FedFW_Server():
                                 device)   # Creating the instance of the users. 
                     
             self.users.append(user)
+
+        # DLG-related initialization
+        self.run_dlg = args.run_dlg
+        self.run_dls = args.run_dls
+        self.kappa = args.kappa
+        self.device = device
+        self.loss = loss
+        self.dlg_batch_size = args.dlg_batch_size
+        train, _ = read_user_data(0, data, args.dataset) # Take Client # 0's data for this experiment
+        self.dataloader = DataLoader(train, args.dlg_batch_size) # Create a dataloader with specified batch size
+        self.iter_dataloader = iter(self.dataloader)
 
     def save_model(self, glob_iter, model_name):
         if model_name == "step_direction":
@@ -81,10 +102,10 @@ class FedFW_Server():
         assert (os.path.exists(model_path))
         self.loaded_global_model = torch.load(model_path)
 
-        for p in self.loaded_global_model.parameters():
-            print(p.grad.data)
-            input("press")
-            # print(p.grad.data)
+        # for p in self.loaded_global_model.parameters():
+        #     print(p.grad.data)
+        #    input("press")
+        #    # print(p.grad.data)
         
 
     def model_exists(self):
@@ -128,12 +149,7 @@ class FedFW_Server():
             if param.requires_grad:
                 init.zeros_(param)
 
-    
-
-
-
     def train(self):
-          
         for t in trange(self.global_iters):
             
             selected_users = select_users(self.users, self.num_users_perGR)
@@ -148,8 +164,46 @@ class FedFW_Server():
             self.global_update(selected_users, t)
             self.evaluate_FW_gap(selected_users, t)
             self.evaluate(self.users)  # evaluate global model
-            # self.save_model(t, "step_direction")
+            self.save_model(t, "step_direction")
 
+        # Load the saved model (for debugging purposes)
+        # self.load_model()
+        # self.s_bar_t = self.loaded_global_model
+        self.x_bar_t.eval()
+
+        if self.run_dlg or self.run_dls:
+            # Get a random batch from the data
+            (X, y) = next(self.iter_dataloader)
+            gt_data = X.to(self.device)
+            gt_labels = y.long()
+            gt_onehot_labels = torch.nn.functional.one_hot(gt_labels, num_classes=10)
+
+            # Plot the images in the batch in a single figure as subplots
+            num_images = X.shape[0]
+            fig1, axs1 = plt.subplots(num_images)
+            fig1.suptitle('Deep Leakage Experiments: Ground Truth Images in Batch')
+
+            for image_idx in range(num_images):
+                if num_images > 1:
+                    axs1[image_idx].imshow(tt(gt_data[image_idx].cpu()))
+                    axs1[image_idx].set_title('Ground Truth Label: ' + str(int(gt_labels[image_idx])))
+                    axs1[image_idx].axis('off')
+                else:
+                    axs1.imshow(tt(gt_data[image_idx].cpu()))
+                    axs1.set_title('Ground Truth Label: ' + str(int(gt_labels[image_idx])))
+                    axs1.axis('off')
+
+            # compute original gradient on this random batch
+            pred = self.x_bar_t(gt_data)
+            y = self.loss(pred, gt_labels)
+            origin_grad = torch.autograd.grad(y, self.x_bar_t.parameters())
+
+        if self.run_dlg:
+            self.deep_leakage_from_gradients(gt_data, gt_onehot_labels, origin_grad)
+        if self.run_dls:
+            origin_fw_step_dir = [LMO_l2(origin_g, self.kappa) for origin_g in origin_grad]
+            self.deep_leakage_from_step_directions(gt_data, gt_onehot_labels, origin_fw_step_dir)
+        plt.show()
 
     def evaluate_FW_gap(self, users, t):
         gaps = 0.0
@@ -277,3 +331,123 @@ class FedFW_Server():
 
         # Show the graph
         plt.show()
+
+    def deep_leakage_from_gradients(self, gt_data, gt_onehot_labels, origin_grad):
+
+        # Generate random data and labels for starting the DLG-based optimization (this will be reconstructed data)
+        dummy_data = torch.randn(gt_data.size()).to(self.device).requires_grad_(True)
+        dummy_label = torch.randn(gt_onehot_labels.size()).to(self.device).requires_grad_(True)
+
+        # Use L-BFGS optimizer
+        optimizer = torch.optim.LBFGS([dummy_data, dummy_label], line_search_fn='strong_wolfe')
+
+        # Store the history of DLG iterates for the first image in the batch (for debugging purposes)
+        history = []
+
+        # Run L-BFGS optimizer for 300 iterations
+        for iters in range(300):
+            def closure():
+                optimizer.zero_grad()
+                dummy_pred = self.x_bar_t(dummy_data)
+                dummy_onehot_label = torch.nn.functional.softmax(dummy_label, dim=-1)
+                dummy_loss = self.loss(dummy_pred, dummy_onehot_label)
+
+                dummy_grad = torch.autograd.grad(dummy_loss, self.x_bar_t.parameters(), create_graph=True)
+
+                grad_diff = sum(((dummy_g - origin_g) ** 2).sum() for dummy_g, origin_g in zip(dummy_grad, origin_grad))
+
+                grad_diff.backward()
+                return grad_diff
+
+            optimizer.step(closure)
+
+            if iters % 10 == 0:
+                current_loss = closure()
+                print(iters, "%.4f" % current_loss.item())
+                history.append(tt(dummy_data[0].cpu()))
+
+        # Plot the final reconstructed images in the batch in a single figure as subplots
+        num_images = gt_data.shape[0]
+        fig2, axs2 = plt.subplots(num_images)
+        fig2.suptitle('Deep Leakage from Gradients: Reconstructed Images in Batch')
+        for image_idx in range(num_images):
+            if num_images > 1:
+                axs2[image_idx].imshow(tt(dummy_data[image_idx].cpu()))
+                axs2[image_idx].set_title('Label: ' + str(int(torch.argmax(dummy_label[image_idx]))))
+                axs2[image_idx].axis('off')
+            else:
+                axs2.imshow(tt(dummy_data[image_idx].cpu()))
+                axs2.set_title('Label: ' + str(int(torch.argmax(dummy_label[image_idx]))))
+                axs2.axis('off')
+
+        # Plot the history of DLG-based reconstruction on a single image
+        plt.figure(figsize=(12, 8))
+        plt.suptitle("Deep Leakage from Gradients Reconstruction History for Sample #0")
+        for i in range(30):
+            plt.subplot(3, 10, i + 1)
+            plt.imshow(history[i])
+            plt.title("Iteration # %d" % (i * 10))
+            plt.axis('off')
+
+        return dummy_data, dummy_label, history
+
+    def deep_leakage_from_step_directions(self, gt_data, gt_onehot_labels, origin_fw_step_dir):
+
+        # Generate random data and labels for starting the DLS-based optimization (this will be reconstructed data)
+        dummy_data = torch.randn(gt_data.size()).to(self.device).requires_grad_(True)
+        dummy_label = torch.randn(gt_onehot_labels.size()).to(self.device).requires_grad_(True)
+
+        # Use L-BFGS optimizer
+        optimizer = torch.optim.LBFGS([dummy_data, dummy_label], line_search_fn='strong_wolfe')
+
+        # Store the history of DLS iterates for the first image in the batch (for debugging purposes)
+        history = []
+
+        # Run L-BFGS optimizer for 300 iterations
+        for iters in range(300):
+            def closure():
+                optimizer.zero_grad()
+                dummy_pred = self.x_bar_t(dummy_data)
+                dummy_onehot_label = torch.nn.functional.softmax(dummy_label, dim=-1)
+                dummy_loss = self.loss(dummy_pred, dummy_onehot_label)
+
+                dummy_grad = torch.autograd.grad(dummy_loss, self.x_bar_t.parameters(), create_graph=True)
+                dummy_fw_step_dir = [LMO_l2(dummy_g, self.kappa) for dummy_g in dummy_grad]
+
+                step_dir_diff = sum(((dummy_s - origin_s) ** 2).sum() for dummy_s, origin_s in zip(dummy_fw_step_dir,
+                                                                                                   origin_fw_step_dir))
+
+                step_dir_diff.backward()
+                return step_dir_diff
+
+            optimizer.step(closure)
+
+            if iters % 10 == 0:
+                current_loss = closure()
+                print(iters, "%.4f" % current_loss.item())
+                history.append(tt(dummy_data[0].cpu()))
+
+        # Plot the final reconstructed images in the batch in a single figure as subplots
+        num_images = gt_data.shape[0]
+        fig2, axs2 = plt.subplots(num_images)
+        fig2.suptitle('Deep Leakage from Step Directions: Reconstructed Images in Batch')
+        for image_idx in range(num_images):
+            if num_images > 1:
+                axs2[image_idx].imshow(tt(dummy_data[image_idx].cpu()))
+                axs2[image_idx].set_title('Label: ' + str(int(torch.argmax(dummy_label[image_idx]))))
+                axs2[image_idx].axis('off')
+            else:
+                axs2.imshow(tt(dummy_data[image_idx].cpu()))
+                axs2.set_title('Label: ' + str(int(torch.argmax(dummy_label[image_idx]))))
+                axs2.axis('off')
+
+        # Plot the history of DLG-based reconstruction on a single image
+        plt.figure(figsize=(12, 8))
+        plt.suptitle("Deep Leakage from Step Directions Reconstruction History for Sample #0")
+        for i in range(30):
+            plt.subplot(3, 10, i + 1)
+            plt.imshow(history[i])
+            plt.title("Iteration # %d" % (i * 10))
+            plt.axis('off')
+
+        return dummy_data, dummy_label, history

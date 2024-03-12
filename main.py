@@ -71,6 +71,8 @@ if __name__ == "__main__":
     print("Local_iters: {}".format(args.local_iters))
     print("experiments: {}".format(args.times))
     print("device : {}".format(args.gpu))
+    print("run_dlg: {}".format(args.run_dlg))
+    print("dlg_batch_size: {}".format(args.dlg_batch_size))
     print("=" * 60)
 
     main(args)

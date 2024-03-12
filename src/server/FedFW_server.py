@@ -190,7 +190,7 @@ class FedFW_Server():
             # Get a random batch from the data
             (X, y) = next(self.iter_dataloader)
             gt_data = X.to(self.device)
-            gt_labels = y.long()
+            gt_labels = y.long().to(self.device)
             gt_onehot_labels = torch.nn.functional.one_hot(gt_labels, num_classes=10)
 
             # Plot the images in the batch in a single figure as subplots
@@ -356,7 +356,7 @@ class FedFW_Server():
         dummy_label = torch.randn(gt_onehot_labels.size()).to(self.device).requires_grad_(True)
 
         # Use L-BFGS optimizer
-        optimizer = torch.optim.LBFGS([dummy_data, dummy_label], line_search_fn='strong_wolfe', lr=0.1)
+        optimizer = torch.optim.LBFGS([dummy_data, dummy_label], line_search_fn='strong_wolfe')
 
         # Store the history of DLG iterates for the first image in the batch (for debugging purposes)
         history = []

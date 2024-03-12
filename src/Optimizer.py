@@ -27,7 +27,8 @@ class FedFW(Optimizer):
                     num_client_iter: int,
                     step_direction_func: Callable[[torch.Tensor, float], torch.Tensor], 
                     kappa: float,
-                    algorithm: str):
+                    algorithm: str,
+                    num_user_per_GR: int):
         
         if  lambda_0 <= 0.0:
             raise ValueError("Invalid starting Frank-Wolfe penalty parameter lambda {} - should be in >= 0".format(lambda_0))
@@ -48,6 +49,7 @@ class FedFW(Optimizer):
         self.eta_type = eta_type
         self.lambda_type = lambda_type
         self.algorithm = algorithm
+        self.num_user = num_user_per_GR
         print()
         super(FedFW, self).__init__(params, defaults)
 
@@ -99,9 +101,9 @@ class FedFW(Optimizer):
                 # grad.mul_(1 / num_client_iter).add_(p.data - server_p.data, alpha=lambda_t)
                 if self.algorithm == "FedFW_plus":
                     y_it_p.data += lambda_0*(p.data - server_p.data)
-                    grad = (1/ 10)*p.grad.data + lambda_t*(p.data - server_p.data) + y_it_p.data
+                    grad = (1/ self.num_user)*p.grad.data + lambda_t*(p.data - server_p.data) + y_it_p.data
                 else:
-                    grad = (1/ 10)*p.grad.data + lambda_t*(p.data - server_p.data)
+                    grad = (1/ self.num_user)*p.grad.data + lambda_t*(p.data - server_p.data)
                 # Compute step direction from g_i^t
                 
                 fw_step_direction = step_direction_func(grad, kappa)

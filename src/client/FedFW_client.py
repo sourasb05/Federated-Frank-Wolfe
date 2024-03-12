@@ -90,7 +90,8 @@ class FedFW_Client():
                                 num_client_iter=self.local_iters,
                                 step_direction_func=LMO_l1,
                                 kappa=args.kappa,
-                                algorithm=args.fl_algorithm)
+                                algorithm=args.fl_algorithm,
+                                num_user_per_GR=args.num_users_perGR)
         else:
             self.optimizer = FedFW(self.x_it.parameters(),
                                 lambda_0=self.lambda_0,
@@ -100,7 +101,8 @@ class FedFW_Client():
                                 num_client_iter=self.local_iters,
                                 step_direction_func=LMO_l2,
                                 kappa=args.kappa,
-                                algorithm=args.fl_algorithm)
+                                algorithm=args.fl_algorithm,
+                                num_user_per_GR=args.num_users_perGR)
      
     
     

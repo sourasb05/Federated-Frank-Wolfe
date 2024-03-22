@@ -511,14 +511,5 @@ def average_result(path,directory_name, algorithm, avg_file):
 Get the average of accuracy and loss
 """
 
-path = "/proj/sourasb-220503/codebase/FedFWplus/results/FedFW/SYNTHETIC/MCLR/time_varing_eta/time_varing_lambda/perf/10/"
-directory_name = "/proj/sourasb-220503/codebase/FedFWplus/results/convergence/SYNTHETIC/10/mclr/"
+
 average_result(path, directory_name, 'Fedfw', 'fedfw')
-
-
-"""path = "/proj/sourasb-220503/codebase/FedFWplus/results/convergence/MNIST/10/mclr/"
-acc_file = "accuracy_sota"
-loss_file = "loss_sota"
-
-convergence_analysis(path, acc_file, loss_file)
-"""

@@ -183,7 +183,7 @@ class FedProx_Server():
    
         print(alg)
        
-        directory_name = self.algorithm + "/" + self.dataset_name + "/" + str(self.global_model_name) + "/perf/" +  str(self.num_labels)
+        directory_name = self.algorithm + "/" + self.dataset_name + "/" + str(self.global_model_name) + "/perf/norm_l2/" +  str(self.num_labels)
         # Check if the directory already exists
         if not os.path.exists("./results/"+directory_name):
         # If the directory does not exist, create it

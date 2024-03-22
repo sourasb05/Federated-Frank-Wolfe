@@ -33,7 +33,7 @@ def main(args):
             
             print(args.dataset)
               
-            if args.fl_algorithm == "FedFW" or args.fl_algorithm == "FedFW_Plus":
+            if args.fl_algorithm in ["FedFW", "FedFW_Plus", "FedFW_sto"]:
                 server = FedFW_Server(args, model, loss, device)
                 
             elif args.fl_algorithm == "FedAvg":
@@ -73,6 +73,9 @@ if __name__ == "__main__":
     print("device : {}".format(args.gpu))
     print("run_dlg: {}".format(args.run_dlg))
     print("dlg_batch_size: {}".format(args.dlg_batch_size))
+    print("LMO: {}".format(args.lmo))
+    print("Norm: {}".format(args.p))
+    
     print("=" * 60)
 
     main(args)

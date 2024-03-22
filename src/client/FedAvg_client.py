@@ -30,6 +30,7 @@ class Fed_Avg_Client():
         self.batch_size = args.batch_size
         self.optimizer_name = args.optimizer
         self.kappa = args.kappa
+        self.p = args.p
         
         if self.optimizer_name == "GD" or self.optimizer_name == "PGD":
             self.trainloader = DataLoader(train_set, self.train_samples)
@@ -95,31 +96,19 @@ class Fed_Avg_Client():
             for idx, l_param in enumerate(self.local_model.parameters()):
                 l_param.data = glob_model_param[idx].clone()
 
-    def l2_projection(self, x, radius):
+    def l2_projection(self, x, radius, p):
         """
         Projects the input vector x onto the L2 ball with the given radius.
         """
         
-        l2_norm = torch.norm(x.float(), p=2)
-        # print(l2_norm)
-        # print(radius)
-        # input("press")
+        norm = torch.norm(x.float(), p)
         
-        if l2_norm <= radius:
+        if norm <= radius:
             return x
+            print(f"norm : {norm}")
         else:
-            return torch.mul(torch.div(x, l2_norm), radius)
-
-
-    """def Projection_l1(x, alpha):
-            shape = x.shape
-            x = x.reshape(-1)
-            proj = euclidean_proj_l1ball(x, alpha)
-        return proj.reshape(*shape)
-        
-        def Projection_l2(x, alpha):
-            return x / max(alpha, np.linalg.norm(x, 2))
-"""
+            print(f"norm : {norm}")
+            return torch.mul(torch.div(x, norm), radius)
 
         
     def projection(self):
@@ -131,8 +120,7 @@ class Fed_Avg_Client():
             param_size.append(len(param.data.view(-1)))
           
         param_concat = torch.cat(all_param, dim=0)
-        l2_radius = self.kappa
-        param_concat_proj = self.l2_projection(param_concat, l2_radius)
+        param_concat_proj = self.l2_projection(param_concat, self.kappa, self.p)
     
         
         param_proj = torch.split(param_concat_proj, param_size, dim=0)

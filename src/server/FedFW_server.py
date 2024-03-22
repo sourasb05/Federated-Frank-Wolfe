@@ -35,6 +35,7 @@ class FedFW_Server():
         self.lambda_type = args.lambda_type
         self.kappa = args.kappa
         self.num_users_perGR = args.num_users_perGR
+        self.user_frac = args.num_users_perGR/args.num_users
         self.exp_no = args.exp_no
         self.num_labels = args.num_labels
         self.lambda_0 = args.lambda_0
@@ -70,6 +71,7 @@ class FedFW_Server():
                                 test,
                                 self.eta_t,
                                 self.lambda_t,
+                                self.user_frac,
                                 data_ratio,
                                 device)   # Creating the instance of the users. 
                     
@@ -210,7 +212,7 @@ class FedFW_Server():
         for user in users:
             gaps += user.fw_gap*(1/len(users))
         self.fw_gaps.append(gaps.item())
-        print(f"Frank wolfe Gaps at global round {t} :", self.fw_gaps)
+        # print(f"Frank wolfe Gaps at global round {t} :", self.fw_gaps)
         
     def evaluate(self, users):
         tot_train_loss = 0
@@ -271,10 +273,13 @@ class FedFW_Server():
         #    "_model_" + str(self.model_name) + "_lamdba_0_" + str(self.lambda_0) + "_eta_0_" + str(self.eta_0) + \
         #    "_kappa_" + str(self.kappa) + "_global_iters_" + str(self.global_iters) + "_" + d1
         
-        alg = "LMO_" + str(self.lmo) + "_lamdba_0_" + str(self.lambda_0) + "_eta_0_" + str(self.eta_0) + "_kappa_" + str(self.kappa) + "_labels_" + str(self.num_labels) + "_global_iters_" + str(self.global_iters) + "_" + d1
-        print(alg)
-       
-        directory_name = self.fl_algorithm + "/" + self.dataset + "/" + str(self.model_name) + "/hyperparameters/" + str(self.lmo) + "/" + str(self.num_labels)
+        #alg = str(self.lmo) + "_lamdba_0_" + str(self.lambda_0) + "_eta_0_" + str(self.eta_0) + "_kappa_" + str(self.kappa) + "_labels_" + str(self.num_labels) + "_global_iters_" + str(self.global_iters) + "_" + d1
+        alg = str(self.lmo) + "_lamdba_0_" + str(self.lambda_0)
+        # print(alg)
+        # alg = self.eta_type + "_" + str(self.eta_0) + "_" +self.lambda_type + "_" + str(self.lambda_0) 
+        # alg = str(self.lmo) + "_lambda_0_" + str(self.lambda_0) + "_client_frac_" + str(self.user_frac) + "_labels_" + str(self.num_labels) + "_global_iters_" + str(self.global_iters) + "_" + d1
+        # directory_name = self.fl_algorithm + "/" + self.dataset + "/" + str(self.model_name) + "/ablation_new/client_part/" + str(self.lmo) + "/" + str(self.num_labels) + "/" + str(self.user_frac) 
+        directory_name = self.fl_algorithm + "/" + self.dataset + "/" + str(self.model_name) + "/perf/new/" + str(self.num_users_perGR) + "/" + str(self.lmo) + "/" + str(self.num_labels)         
         # Check if the directory already exists
         if not os.path.exists("./results/"+directory_name):
         # If the directory does not exist, create it
@@ -285,6 +290,7 @@ class FedFW_Server():
             hf.create_dataset('kappa', data=self.kappa) 
             hf.create_dataset('lambda_0', data=self.lambda_0)
             hf.create_dataset('eta_0', data=self.eta_0) 
+            hf.create_dataset('user_frac', data=self.user_frac) 
             hf.create_dataset('eta_type', data=self.eta_type)
             hf.create_dataset('lambda_type', data=self.lambda_type)
             hf.create_dataset('global_rounds', data=self.global_iters)

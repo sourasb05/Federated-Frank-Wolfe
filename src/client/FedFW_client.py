@@ -17,7 +17,8 @@ class FedFW_Client():
                 train_set, 
                 test_set, 
                 eta_t,
-                lambda_0,  
+                lambda_0,
+                user_frac,  
                 data_ratio, 
                 device):
         """
@@ -25,7 +26,8 @@ class FedFW_Client():
         """
         self.x_it = copy.deepcopy(model)  # local model
         self.s_it = copy.deepcopy(model) # step direction
-        self.y_it = copy.deepcopy(model)
+        self.y_it = copy.deepcopy(model)  # y_it is d_it for FrankFW-sto
+        
         self.eval_model = copy.deepcopy(model) # evaluate global model
         
         for param in self.y_it.parameters():
@@ -91,7 +93,8 @@ class FedFW_Client():
                                 step_direction_func=LMO_l1,
                                 kappa=args.kappa,
                                 algorithm=args.fl_algorithm,
-                                num_user_per_GR=args.num_users_perGR)
+                                num_user_per_GR=args.num_users_perGR,
+                                user_frac=user_frac)
         else:
             self.optimizer = FedFW(self.x_it.parameters(),
                                 lambda_0=self.lambda_0,
@@ -102,7 +105,8 @@ class FedFW_Client():
                                 step_direction_func=LMO_l2,
                                 kappa=args.kappa,
                                 algorithm=args.fl_algorithm,
-                                num_user_per_GR=args.num_users_perGR)
+                                num_user_per_GR=args.num_users_perGR,
+                                user_frac=user_frac)
      
     
     

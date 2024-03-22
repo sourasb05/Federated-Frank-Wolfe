@@ -1,84 +1,19 @@
-python main.py --fl_algorithm=FedFW_Plus --dataset=MNIST --model_name=MCLR --eta_0=0.1 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW_Plus --dataset=MNIST --model_name=MCLR --eta_0=0.1 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW_Plus --dataset=MNIST --model_name=MCLR --eta_0=0.1 --lambda_0=0.001 
-python main.py --fl_algorithm=FedFW_Plus --dataset=MNIST --model_name=MCLR --eta_0=0.01 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW_Plus --dataset=MNIST --model_name=MCLR --eta_0=0.01 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW_Plus --dataset=MNIST --model_name=MCLR --eta_0=0.01 --lambda_0=0.001 
-python main.py --fl_algorithm=FedFW_Plus --dataset=MNIST --model_name=MCLR --eta_0=0.001 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW_Plus --dataset=MNIST --model_name=MCLR --eta_0=0.001 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW_Plus --dataset=MNIST --model_name=MCLR --eta_0=0.001 --lambda_0=0.001 
+python main.py --p=1 --fl_algorithm=FedDR --optimizer=PerturbedSGD --dataset=MNIST --model_name=MCLR --num_labels=3 --kappa=10
+python main.py --p=1 --fl_algorithm=FedDR --optimizer=PerturbedSGD --dataset=MNIST --model_name=MCLR --num_labels=10 --kappa=10
+python main.py --p=1 --fl_algorithm=FedAvg --optimizer=PGD --dataset=MNIST --model_name=MCLR --num_labels=3 --kappa=10
+python main.py --p=1 --fl_algorithm=FedAvg --optimizer=PGD --dataset=MNIST --model_name=MCLR --num_labels=10 --kappa=10
 
-python main.py --fl_algorithm=FedFW --dataset=MNIST --model_name=MCLR --eta_0=0.1 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW --dataset=MNIST --model_name=MCLR --eta_0=0.1 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW --dataset=MNIST --model_name=MCLR --eta_0=0.1 --lambda_0=0.001 
-python main.py --fl_algorithm=FedFW --dataset=MNIST --model_name=MCLR --eta_0=0.01 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW --dataset=MNIST --model_name=MCLR --eta_0=0.01 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW --dataset=MNIST --model_name=MCLR --eta_0=0.01 --lambda_0=0.001 
-python main.py --fl_algorithm=FedFW --dataset=MNIST --model_name=MCLR --eta_0=0.001 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW --dataset=MNIST --model_name=MCLR --eta_0=0.001 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW --dataset=MNIST --model_name=MCLR --eta_0=0.001 --lambda_0=0.001 
+python main.py --p=1 --fl_algorithm=FedDR --optimizer=PerturbedSGD --dataset=MNIST --model_name=CNN --num_labels=3 --kappa=10
+python main.py --p=1 --fl_algorithm=FedDR --optimizer=PerturbedSGD --dataset=MNIST --model_name=CNN --num_labels=10 --kappa=10
+python main.py --p=1 --fl_algorithm=FedAvg --optimizer=PGD --dataset=MNIST --model_name=CNN --num_labels=3 --kappa=10
+python main.py --p=1 --fl_algorithm=FedAvg --optimizer=PGD --dataset=MNIST --model_name=CNN --num_labels=10 --kappa=10
 
-
-python main.py --fl_algorithm=FedFW_Plus --dataset=SYNTHETIC --model_name=DNN --eta_0=0.1 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW_Plus --dataset=SYNTHETIC --model_name=DNN --eta_0=0.1 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW_Plus --dataset=SYNTHETIC --model_name=DNN --eta_0=0.1 --lambda_0=0.001 
-python main.py --fl_algorithm=FedFW_Plus --dataset=SYNTHETIC --model_name=DNN --eta_0=0.01 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW_Plus --dataset=SYNTHETIC --model_name=DNN --eta_0=0.01 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW_Plus --dataset=SYNTHETIC --model_name=DNN --eta_0=0.01 --lambda_0=0.001 
-python main.py --fl_algorithm=FedFW_Plus --dataset=SYNTHETIC --model_name=DNN --eta_0=0.001 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW_Plus --dataset=SYNTHETIC --model_name=DNN --eta_0=0.001 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW_Plus --dataset=SYNTHETIC --model_name=DNN --eta_0=0.001 --lambda_0=0.001 
-
-python main.py --fl_algorithm=FedFW --dataset=SYNTHETIC --model_name=DNN --eta_0=0.1 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW --dataset=SYNTHETIC --model_name=DNN --eta_0=0.1 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW --dataset=SYNTHETIC --model_name=DNN --eta_0=0.1 --lambda_0=0.001 
-python main.py --fl_algorithm=FedFW --dataset=SYNTHETIC --model_name=DNN --eta_0=0.01 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW --dataset=SYNTHETIC --model_name=DNN --eta_0=0.01 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW --dataset=SYNTHETIC --model_name=DNN --eta_0=0.01 --lambda_0=0.001 
-python main.py --fl_algorithm=FedFW --dataset=SYNTHETIC --model_name=DNN --eta_0=0.001 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW --dataset=SYNTHETIC --model_name=DNN --eta_0=0.001 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW --dataset=SYNTHETIC --model_name=DNN --eta_0=0.001 --lambda_0=0.001 
-
-
-python main.py --fl_algorithm=FedFW_Plus --dataset=SYNTHETIC --model_name=MCLR --eta_0=0.1 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW_Plus --dataset=SYNTHETIC --model_name=MCLR --eta_0=0.1 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW_Plus --dataset=SYNTHETIC --model_name=MCLR --eta_0=0.1 --lambda_0=0.001 
-python main.py --fl_algorithm=FedFW_Plus --dataset=SYNTHETIC --model_name=MCLR --eta_0=0.01 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW_Plus --dataset=SYNTHETIC --model_name=MCLR --eta_0=0.01 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW_Plus --dataset=SYNTHETIC --model_name=MCLR --eta_0=0.01 --lambda_0=0.001 
-python main.py --fl_algorithm=FedFW_Plus --dataset=SYNTHETIC --model_name=MCLR --eta_0=0.001 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW_Plus --dataset=SYNTHETIC --model_name=MCLR --eta_0=0.001 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW_Plus --dataset=SYNTHETIC --model_name=MCLR --eta_0=0.001 --lambda_0=0.001 
-
-python main.py --fl_algorithm=FedFW --dataset=SYNTHETIC --model_name=MCLR --eta_0=0.1 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW --dataset=SYNTHETIC --model_name=MCLR --eta_0=0.1 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW --dataset=SYNTHETIC --model_name=MCLR --eta_0=0.1 --lambda_0=0.001 
-python main.py --fl_algorithm=FedFW --dataset=SYNTHETIC --model_name=MCLR --eta_0=0.01 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW --dataset=SYNTHETIC --model_name=MCLR --eta_0=0.01 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW --dataset=SYNTHETIC --model_name=MCLR --eta_0=0.01 --lambda_0=0.001 
-python main.py --fl_algorithm=FedFW --dataset=SYNTHETIC --model_name=MCLR --eta_0=0.001 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW --dataset=SYNTHETIC --model_name=MCLR --eta_0=0.001 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW --dataset=SYNTHETIC --model_name=MCLR --eta_0=0.001 --lambda_0=0.001 
-
-
-python main.py --fl_algorithm=FedFW_Plus --dataset=MNIST --model_name=CNN --eta_0=0.1 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW_Plus --dataset=MNIST --model_name=CNN --eta_0=0.1 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW_Plus --dataset=MNIST --model_name=CNN --eta_0=0.1 --lambda_0=0.001 
-python main.py --fl_algorithm=FedFW_Plus --dataset=MNIST --model_name=CNN --eta_0=0.01 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW_Plus --dataset=MNIST --model_name=CNN --eta_0=0.01 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW_Plus --dataset=MNIST --model_name=CNN --eta_0=0.01 --lambda_0=0.001 
-python main.py --fl_algorithm=FedFW_Plus --dataset=MNIST --model_name=CNN --eta_0=0.001 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW_Plus --dataset=MNIST --model_name=CNN --eta_0=0.001 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW_Plus --dataset=MNIST --model_name=CNN --eta_0=0.001 --lambda_0=0.001 
-
-
-python main.py --fl_algorithm=FedFW --dataset=MNIST --model_name=CNN --eta_0=0.1 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW --dataset=MNIST --model_name=CNN --eta_0=0.1 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW --dataset=MNIST --model_name=CNN --eta_0=0.1 --lambda_0=0.001 
-python main.py --fl_algorithm=FedFW --dataset=MNIST --model_name=CNN --eta_0=0.01 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW --dataset=MNIST --model_name=CNN --eta_0=0.01 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW --dataset=MNIST --model_name=CNN --eta_0=0.01 --lambda_0=0.001 
-python main.py --fl_algorithm=FedFW --dataset=MNIST --model_name=CNN --eta_0=0.001 --lambda_0=0.1 
-python main.py --fl_algorithm=FedFW --dataset=MNIST --model_name=CNN --eta_0=0.001 --lambda_0=0.01 
-python main.py --fl_algorithm=FedFW --dataset=MNIST --model_name=CNN --eta_0=0.001 --lambda_0=0.001 
-
+python main.py --p=1 --fl_algorithm=FedDR --optimizer=PerturbedSGD --dataset=SYNTHETIC --model_name=MCLR --num_labels=3 --kappa=10
+python main.py --p=1 --fl_algorithm=FedDR --optimizer=PerturbedSGD --dataset=SYNTHETIC --model_name=MCLR --num_labels=10 --kappa=10
+python main.py --p=1 --fl_algorithm=FedAvg --optimizer=PGD --dataset=SYNTHETIC --model_name=MCLR --num_labels=3 --kappa=10
+python main.py --p=1 --fl_algorithm=FedAvg --optimizer=PGD --dataset=SYNTHETIC --model_name=MCLR --num_labels=10 --kappa=10
+ 
+python main.py --p=1 --fl_algorithm=FedDR --optimizer=PerturbedSGD --dataset=SYNTHETIC --model_name=DNN --num_labels=3 --kappa=10
+python main.py --p=1 --fl_algorithm=FedDR --optimizer=PerturbedSGD --dataset=SYNTHETIC --model_name=DNN --num_labels=10 --kappa=10
+python main.py --p=1 --fl_algorithm=FedAvg --optimizer=PGD --dataset=SYNTHETIC --model_name=DNN --num_labels=3 --kappa=10
+python main.py --p=1 --fl_algorithm=FedAvg --optimizer=PGD --dataset=SYNTHETIC --model_name=DNN --num_labels=10 --kappa=10

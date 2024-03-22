@@ -21,36 +21,35 @@ class cnn_Mnist(nn.Module):
         return F.log_softmax(x, dim=1)
 
 
-"""class cnn_Mnist(nn.Module):
+# CNN model for CIFAR10 
+    
+class cnn_Cifar10(nn.Module):
     def __init__(self):
-        super(cnn_Mnist, self).__init__()
-        self.conv1 = nn.Conv2d(1, 16, 2, 1)
-        self.conv2 = nn.Conv2d(16, 32, 2, 1)
-        self.dropout1 = nn.Dropout(0.25)
-        self.dropout2 = nn.Dropout(0.5)
-        self.fc1 = nn.Linear(18432, 128)
-        self.fc2 = nn.Linear(128, 10)
+        super(cnn_Cifar10, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.conv3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
+        
+        self.fc1 = nn.Linear(in_features=128 * 4 * 4, out_features=512)
+        self.fc2 = nn.Linear(in_features=512, out_features=128)
+        self.fc3 = nn.Linear(in_features=128, out_features=10)
 
     def forward(self, x):
-        x = self.conv1(x)
-        x = nn.ReLU()(x)
-        x = nn.MaxPool2d(2, 1)(x)
-        x = self.dropout1(x)
-        x = self.conv2(x)
-        x = nn.ReLU()(x)
-        x = nn.MaxPool2d(2, 1)(x)
-        x = self.dropout2(x)
-        x = torch.flatten(x, 1)
-        x = self.fc1(x)
-        x = nn.ReLU()(x)
-        x = self.fc2(x)
-        output = F.log_softmax(x, dim=1)
-        return output
-"""    
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = self.pool(F.relu(self.conv3(x)))
+        
+        # Flatten the output for the fully connected layers
+        x = x.view(-1, 128 * 4 * 4)
+        
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        
+        return F.log_softmax(x, dim=1)      
 
-# CNN model for CIFAR10 
-
-class cnn_Cifar10(nn.Module):
+"""class cnn_Cifar10(nn.Module):
     def __init__(self):
         super(cnn_Cifar10, self).__init__()
         self.conv1 = nn.Conv2d(3, 6, 5)
@@ -68,7 +67,7 @@ class cnn_Cifar10(nn.Module):
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
         return F.log_softmax(x, dim=1)
-# CNN model for FMNIST
+# CNN model for FMNIST"""
 
 class cnn_Fmnist(nn.Module):
   def __init__(self, args):

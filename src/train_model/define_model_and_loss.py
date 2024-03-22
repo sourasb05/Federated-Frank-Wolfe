@@ -34,12 +34,12 @@ def define_model_and_loss(args, device):
 
             elif args.dataset == "CIFAR10":
                 model = cnn_Cifar10().to(device)
-                loss = nn.NLLLoss()
+                loss = nn.CrossEntropyLoss()
                     
                     
             elif args.dataset == "EMNIST":
                 model = cnn_Emnist().to(device)
-                loss = nn.NLLLoss()
+                loss = nn.CrossEntropyLoss()
                     
             elif args.dataset == "CELEBA":
                 model = cnn_Celeba().to(device)
@@ -65,7 +65,10 @@ def define_model_and_loss(args, device):
                 model = Mclr_Logistic(60,10).to(device)
                 loss = nn.NLLLoss()
             elif(args.dataset == "EMNIST"):
-                model = Mclr_Logistic(784,62).to(device)
+                if args.split_method == 'byclass':
+                    model = Mclr_Logistic(784,62).to(device)
+                elif args.split_method == 'digits':
+                    model = Mclr_Logistic(784,10).to(device)
                 loss = nn.NLLLoss()
             elif(args.dataset == "FMNIST"):
                 model = Mclr_Logistic(784,10).to(device)

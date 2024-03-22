@@ -29,6 +29,7 @@ class FedDR_Server:
         self.exp_no = args.exp_no
         self.kappa = args.kappa
         self.num_labels = args.num_labels
+        self.p = args.p
         self.avg_train_loss_list = []
         self.avg_test_loss_list = []
         self.avg_train_accuracy_list = []
@@ -53,17 +54,17 @@ class FedDR_Server:
         for user in selected_users:
             for x_bar_k_param, delta_x_hat_k_param in zip (self.x_bar_k.parameters(), user.delta_x_hat_k.parameters()):
                 x_bar_k_param.data = x_bar_k_param.data + (1/len(selected_users))*delta_x_hat_k_param.data
-    def l2_projection(self, x, radius):
+    def l2_projection(self, x):
         """
         Projects the input vector x onto the L2 ball with the given radius.
         """
         
-        l2_norm = torch.norm(x.float(), p=2)
+        l2_norm = torch.norm(x.float(), self.p)
         
-        if l2_norm <= radius:
+        if l2_norm <= self.kappa:
             return x
         else:
-            return torch.mul(torch.div(x, l2_norm), radius)
+            return torch.mul(torch.div(x, l2_norm), self.kappa)
 
 
     
@@ -76,8 +77,7 @@ class FedDR_Server:
             param_size.append(len(param.data.view(-1)))
           
         param_concat = torch.cat(all_param, dim=0)
-        l2_radius = self.kappa
-        param_concat_proj = self.l2_projection(param_concat, l2_radius)
+        param_concat_proj = self.l2_projection(param_concat)
     
         
         param_proj = torch.split(param_concat_proj, param_size, dim=0)
@@ -188,7 +188,7 @@ class FedDR_Server:
    
         print(alg)
        
-        directory_name = self.fl_algorithm + "/" + self.dataset + "/" + str(self.model_name) + "/" + str(self.num_labels)
+        directory_name = self.fl_algorithm + "/" + self.dataset + "/" + str(self.model_name) + "/perf/new/norm_" + str(self.p) + "/" + str(self.num_labels)
         # Check if the directory already exists
         if not os.path.exists("./results/"+directory_name):
         # If the directory does not exist, create it

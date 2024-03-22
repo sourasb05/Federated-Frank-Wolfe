@@ -239,8 +239,8 @@ def read_cifar100_data(NUM_USERS, NUM_LABELS):
         for j in range(NUM_LABELS):  # 
             l = (user + j) % 100
             # print("L:", l)
-            X[user] += cifar100_data[l][idx[l]:idx[l]+10].tolist()
-            y[user] += (l*np.ones(10)).tolist()
+            X[user] += cifar100_data[l][idx[l]:idx[l]+100].tolist()
+            y[user] += (l*np.ones(100)).tolist()
 
             # print("X[",user,"] :",X[user])
             # print("y[",user,"] :",y[user])
@@ -268,7 +268,7 @@ def read_cifar100_data(NUM_USERS, NUM_LABELS):
         for j in range(NUM_LABELS): 
             # l = (2*user+j)%10
             l = (user + j) % 100
-            # num_samples = int(props[l, user//int(NUM_USERS/100), j])
+            num_samples = int(props[l, user//int(NUM_USERS/100), j])
             # print("depth :",l)
             # print("row :",user//int(NUM_USERS/100))
             # print("Column :",j)
@@ -534,7 +534,7 @@ def read_Mnist_data(NUM_USERS, NUM_LABELS):
             # l = (2*user+j)%10
             l = (user + j) % 10
             num_samples = int(props[l, user//int(NUM_USERS/10), j])
-            numran1 = random.randint(300, 600)
+            numran1 = random.randint(300, 3000)
             num_samples = (num_samples)  + numran1 #+ 200
             if(NUM_USERS <= 20): 
                 num_samples = num_samples * 2
@@ -575,7 +575,7 @@ def read_Mnist_data(NUM_USERS, NUM_LABELS):
     return train_data['users'], train_data['user_data'], test_data['user_data']
 
 
-def read_EMnist_data(NUM_USERS, NUM_LABELS):
+def read_EMnist_data(NUM_USERS, NUM_LABELS, T_LABELS, SPLIT_M):
     transform = transforms.Compose([transforms.ToTensor(), # convert to tensor
                                     transforms.Normalize((0.1307,), (0.3081,))])  # normalize the data
 
@@ -591,8 +591,8 @@ def read_EMnist_data(NUM_USERS, NUM_LABELS):
     Letters contains 26 classes,
 
     """
-    trainset = torchvision.datasets.EMNIST(root='./data', train=True, split='digits', download=True, transform=transform)
-    testset = torchvision.datasets.EMNIST(root='./data', train=False,split='digits', download=True, transform=transform)
+    trainset = torchvision.datasets.EMNIST(root='./data', train=True, split=SPLIT_M, download=True, transform=transform)
+    testset = torchvision.datasets.EMNIST(root='./data', train=False,split=SPLIT_M, download=True, transform=transform)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=len(trainset.data), shuffle=False)
     testloader = torch.utils.data.DataLoader(testset, batch_size=len(testset.data), shuffle=False)
 
@@ -632,7 +632,7 @@ def read_EMnist_data(NUM_USERS, NUM_LABELS):
     emnist_data_label = np.array(emnist_data_label)
 
     emnist_data = []
-    for i in trange(10):
+    for i in trange(T_LABELS):
         idx = emnist_data_label==i
         emnist_data.append(emnist_data_image[idx])
 
@@ -645,22 +645,25 @@ def read_EMnist_data(NUM_USERS, NUM_LABELS):
     # Assign 100 samples to each user
     X = [[] for _ in range(NUM_USERS)]
     y = [[] for _ in range(NUM_USERS)]
-    idx = np.zeros(10, dtype=np.int64)
+    idx = np.zeros(T_LABELS, dtype=np.int64)
+    # print(f"total labels : {T_LABELS}")
+    # print(f"split method: {SPLIT_M}")
+    
     for user in range(NUM_USERS):
         for j in range(NUM_LABELS):  # 3 labels for each users
             #l = (2*user+j)%10
-            l = (user + j) % 10
+            l = (user + j) % T_LABELS
             # print("L:", l)
-            X[user] += emnist_data[l][idx[l]:idx[l]+10].tolist()
-            y[user] += (l*np.ones(10)).tolist()
-            idx[l] += 10
+            X[user] += emnist_data[l][idx[l]:idx[l]+100].tolist()
+            y[user] += (l*np.ones(100)).tolist()
+            idx[l] += 100
 
     # print("IDX1:", idx)  # counting samples for each labels
 
     # Assign remaining sample by power law
     user = 0
     props = np.random.lognormal(
-        0, 2., (10, NUM_USERS, NUM_LABELS))  # last 5 is 5 labels
+        0, 2., (T_LABELS, NUM_USERS, NUM_LABELS))  # last 5 is 5 labels
     props = np.array([[[len(v)-NUM_USERS]] for v in emnist_data]) * \
         props/np.sum(props, (1, 2), keepdims=True)
     # print("here:",props/np.sum(props,(1,2), keepdims=True))
@@ -671,13 +674,13 @@ def read_EMnist_data(NUM_USERS, NUM_LABELS):
     for user in trange(NUM_USERS):
         for j in range(NUM_LABELS):  # 4 labels for each users
             # l = (2*user+j)%10
-            l = (user + j) % 10
+            l = (user + j) % T_LABELS
             
-            num_samples = int(props[l, user//int(NUM_USERS/10), j])
+            num_samples = int(props[l, user//int(NUM_USERS/T_LABELS), j])
             # print(num_samples)
             # print("j = ",j)
             # input("press")
-            numran1 = random.randint(300, 600)
+            numran1 = random.randint(300, 3000)
             num_samples = (num_samples)  + numran1 #+ 200
             if(NUM_USERS <= 20): 
                 num_samples = num_samples * 2
@@ -1152,7 +1155,7 @@ def read_data(args):
         return clients, train_data, test_data
 
     elif(args.dataset == "EMNIST"):
-        clients, train_data, test_data = read_EMnist_data(args.num_users, args.num_labels)
+        clients, train_data, test_data = read_EMnist_data(args.num_users, args.num_labels, args.total_labels, args.split_method)
         return clients, train_data, test_data
 
     elif(args.dataset == 'CELEBA'):

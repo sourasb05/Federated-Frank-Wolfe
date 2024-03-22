@@ -28,7 +28,8 @@ class FedFW(Optimizer):
                     step_direction_func: Callable[[torch.Tensor, float], torch.Tensor], 
                     kappa: float,
                     algorithm: str,
-                    num_user_per_GR: int):
+                    num_user_per_GR: int,
+                    user_frac: float):
         
         if  lambda_0 <= 0.0:
             raise ValueError("Invalid starting Frank-Wolfe penalty parameter lambda {} - should be in >= 0".format(lambda_0))
@@ -50,7 +51,8 @@ class FedFW(Optimizer):
         self.lambda_type = lambda_type
         self.algorithm = algorithm
         self.num_user = num_user_per_GR
-        print()
+        self.p = user_frac
+        #print()
         super(FedFW, self).__init__(params, defaults)
 
 
@@ -90,18 +92,32 @@ class FedFW(Optimizer):
                 if self.eta_type == "constant":
                     eta_t = group['eta_t'] ## 
                 else:
-                    eta_t = 2 / (step + 1)
+                    if self.algorithm == "FedFW_sto":
+                        eta_t = 9/(step+8)
+                    else:
+                        eta_t = 2 / (self.p*(step -1) + 2)
 
                 if self.lambda_type == "constant":
                     lambda_t = group['lambda_0']
                 else:
-                    lambda_t = lambda_0 * math.sqrt(step + 1)
-
+                    if self.algorithm == "FedFW_sto":
+                        lambda_t = lambda_0*math.sqrt(step+8)
+                    else:
+                        lambda_t = lambda_0 * math.sqrt(self.p*(step - 1) + 2)
+                """
+                compute roh_t
+                """
+                
+                roh_t = 4/(step+7)**(2/3)
                 # Compute g_i^t
                 # grad.mul_(1 / num_client_iter).add_(p.data - server_p.data, alpha=lambda_t)
                 if self.algorithm == "FedFW_plus":
                     y_it_p.data += lambda_0*(p.data - server_p.data)
                     grad = (1/ self.num_user)*p.grad.data + lambda_t*(p.data - server_p.data) + y_it_p.data
+                elif self.algorithm == "FedFW_sto":
+                    y_it_p.data = (1-roh_t)*y_it_p.data + roh_t*(1/ self.num_user)*p.grad.data
+                    grad = lambda_t*(p.data - server_p.data) + y_it_p.data
+
                 else:
                     grad = (1/ self.num_user)*p.grad.data + lambda_t*(p.data - server_p.data)
                 # Compute step direction from g_i^t

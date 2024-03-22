@@ -2,7 +2,8 @@ import os
 import h5py
 import numpy as np
 attributes = []
-hf = h5py.File('/home/sourasb/PHD/paper_V/FedFWplus/results/FedFW_Plus/MNIST/MCLR/time_varing_eta/time_varing_lambda/hyperparameters/3/0_dataset_MNIST_aggregator_simple_averaging_fl_algorithm_FedFW_Plus_model_MCLR_lamdba_0_0.1_eta_0_1_kappa_10.0_global_iters_5_07_03_2024.h5','r')
+path = '/proj/sourasb-220503/codebase/FedFWplus/results/FedFW_Plus/MNIST/CNN/perf/lmo_l2/10/'
+hf = h5py.File(path + '0_dataset_MNIST_fl_algorithm_FedDR_model_CNN_eta_0.001_kappa_10.0_global_iters_1000_12_03_2024'+'.h5','r')
 id = 0
 
 for key in hf.keys():
@@ -21,7 +22,7 @@ print("eta 0", np.array(eta))
 print("lamda 0", np.array(lamda))
 print(f"frank wolfe gap: {np.array(fw_gap)}")
 #print("train accuracy",np.array(tra))
-print("test accuracy",np.array(tsa))
+print("test accuracy",np.max(np.array(tsa)))
 #print("train loss",np.array(trl))
 #print("test loss",np.array(tsl))
 # print(np.array(gtra))

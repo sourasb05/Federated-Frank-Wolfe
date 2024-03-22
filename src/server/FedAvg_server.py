@@ -33,6 +33,7 @@ class Fed_Avg_Server():
         self.num_users_perGR = args.num_users_perGR
         self.optimizer_name = args.optimizer
         self.num_labels=args.num_labels
+        self.p=args.p
         self.avg_train_loss_list = []
         self.avg_test_loss_list = []
         self.avg_train_accuracy_list = []
@@ -166,7 +167,7 @@ class Fed_Avg_Server():
    
         print(alg)
        
-        directory_name = self.fl_algorithm + "/" + self.dataset_name + "/" + str(self.model_name) + "/" + str(self.optimizer_name) + "/perf/" +  str(self.num_labels)
+        directory_name = self.fl_algorithm + "/" + self.dataset_name + "/" + str(self.model_name) + "/" + str(self.optimizer_name) + "/perf/norm_" + str(self.p) + "/" +  str(self.num_labels)
         # Check if the directory already exists
         if not os.path.exists("./results/"+directory_name):
         # If the directory does not exist, create it
@@ -174,7 +175,8 @@ class Fed_Avg_Server():
 
         with h5py.File("./results/"+ directory_name + "/" + '{}.h5'.format(alg), 'w') as hf:
             hf.create_dataset('exp_no', data=self.exp_no)
-            hf.create_dataset('lr', data=self.lr) 
+            hf.create_dataset('lr', data=self.lr)
+            hf.create_dataset('norm', data=self.p) 
             hf.create_dataset('batch_size', data=self.batch_size) 
             
             hf.create_dataset('global_rounds', data=self.global_iters)

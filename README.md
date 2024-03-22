@@ -1,10 +1,11 @@
-# The repository contains code base for different federated learning algorithms and their implementations in python. 
+# The repository contains the codes for the paper Federated Frank-Wolfe
+
 
 Algorithms
-1) FedAvg 
+1) FedFW
+2) FedFW+
+3) FedFW-stochastics 
 2) FedDR
-3) FedFW
-4) FedFW+
 
 # Implemented Models
 non-convex settings
@@ -16,18 +17,17 @@ Convex settings
 
 # Datasets
 1) Mnist
-2) FMnist
 3) Cifar10
-4) Cifar100 
-5) FEMNIST 
+5) EMNIST-10
+6) EMNIST-62 
 4) Synthetic datasets 
 
 
 # Optimizers
-
-1) Gradient descent
-2) Stochastic Gradient Descent
-3) Projected Gradient Descent
+1) FedFW
+2) FedFW+
+3) FedFW-stochastics
+4) PerturbedSGD
 
 # Requirement
 
@@ -38,33 +38,12 @@ conda install matplotlib
 conda install -c pytorch torchvision
 conda install -c conda-forge tqdm
 ```
-
-
-
 # How to run
 
-If you are using berzelius gpus then first you have to start interactive session.
+To train the a MCLR model using FedFW algorithm on dataset MNIST non_iid :
 
 ```
-interactive --gpus= number_of_gpus -t hh:mm:sc --account=account_name
-```
-
-example :
-
-```
-interactive --gpus=1 -t 01:00:00 --account=berzelius-2023-106
-```
-
-then activate the conda environment
-
-```
-activate personalized_fl
-```
-
-Now type the following to train the MCLR model with MNIST dataset and FedFW:
-
-```
-python main.py --dataset=MNIST --model=MCLR 
+python main.py --dataset=MNIST --model=MCLR  --lambda_0=0.001 --lmo=lmo_l2 --num_labels=3 --num_users=100 --num_users_perGR=100
 ```
 
 ## Deep leakage privacy sub-experiment

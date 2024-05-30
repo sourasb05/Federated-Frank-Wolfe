@@ -2,11 +2,9 @@
 from src.train_model.define_model_and_loss import define_model_and_loss
 from src.server.FedAvg_server import Fed_Avg_Server
 from src.server.FedFW_server import FedFW_Server
-from src.client.FedAvg_client import Fed_Avg_Client
 from src.server.FedDR_server import FedDR_Server
 from src.server.FedProx_server import FedProx_Server
 from src.utils.utils import select_users, read_data, read_user_data #, RMSE_nuclear
-from src.MatrixComp import My_matrix_comp
 from src.options import args_parser
 import torch
 import torch.nn as nn 
@@ -19,9 +17,6 @@ def main(args):
     current_directory = os.getcwd()
     print(current_directory)
     
-    if args.problem_type == "MATRIX_COMP": problem_category = 1
-    elif args.problem_type == "QAP": problem_category = 2
-    else: problem_category = 3    
     
     while args.exp_no < args.times:
 

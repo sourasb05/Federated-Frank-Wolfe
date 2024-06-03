@@ -58,4 +58,6 @@ python main.py --dataset=MNIST --model=MCLR --run_dlg --run_dls --dls_batch_size
 ```
 
 
-The base framework of this code is inspired from https://github.com/CharlieDinh/pFedMe/tree/master
+## Acknowledgement
+
+The base framework is inspired from https://github.com/CharlieDinh/pFedMe/tree/master
